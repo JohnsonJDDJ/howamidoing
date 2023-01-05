@@ -564,7 +564,7 @@ class Course:
             if target not in self.components.keys(): raise ValueError(f"Target assignment at index {i} not found")
             elif not self.components[target]["curved"]: raise ValueError(f"Target assignment at index {i} is not curved.")
             elif self.components[target]["grouped"]: raise ValueError(f"Target assignment at index {i} must be single not grouped.")
-        print("Error check passed.")
+        # print("Error check passed.")
 
         # Fetch the zscores for clobbering
         z_source = source.get_zscore()
@@ -573,7 +573,7 @@ class Course:
         
         # Apply clobber while we have capacity
         while capacity != 0:
-            print("DEBUG", z_source, z_targets)
+            # print("DEBUG", z_source, z_targets)
             # Zscore from source is no longer larger than any zscore from targets
             # Stop applying clobber
             if all([z_source <= z for z in z_targets]): break
