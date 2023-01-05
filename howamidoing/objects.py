@@ -1,7 +1,37 @@
 from math import isclose
-from utils import *
+from scipy.stats import truncnorm
+from .utils import *
 
 class Assignment:
+    """
+    A generic assignment. The primary definition of an assignment
+    is the score. If the assignment is graded on a curved basis, then
+    it also must be defined by the mean (`mu`) and standard deviation
+    (`sigma`). Additionally, the score could be replaced by a zscore
+    if the assignment is curved--in this case, this assignment is 
+    clobbered. This class is inaccessible from user.
+
+    Attributes
+    ----------
+    score : float
+        The score earned on this assignment
+    name : :obj:`str`, optional
+        Name of this assignment. Optional
+    upper : :obj:`float`, optional
+        The maximum score available of this assignment. Defaults
+        to 100.0
+    mu : :obj:`float`, optional
+        The mean of this assignment. Required for curved assignments.
+    sigma : :obj:`float`, optional
+        The standard deviation of this assignment. Required for
+        curved assignments.
+    curved : :obj:`bool`, optional
+        Curved or not curved. Defaults to None. This attribute should
+        not be accessible from user. 
+    zscore : :obj:`bool`, optional
+        Whether the score entered for this assignment is a zscore. Set
+        to true is this assignment is being clobbered. Defaults to False.
+    """
 
     def __init__(self, score: float, name: str=None,
                  upper: float=100, mu: float=None, sigma: float=None,
@@ -38,14 +68,22 @@ class Assignment:
 
 
     def get_score(self) -> float:
+        """Return score"""
         return self.score
 
     
     def get_zscore(self) -> float:
+        """Return zscore"""
         return self.zscore
 
         
     def get_detail(self) -> dict:
+        """
+        Return a dictionary of full details about this
+        assignment. Includes score and potentially the
+        mean, standard deviation, and zscore of this 
+        assignment if curved.
+        """
         detail = dict()
         detail["score"] = self.score
         
@@ -63,8 +101,29 @@ class Assignment:
 
 class CurvedSingleAssignment(Assignment):
     """
-    A single curved assignment that counts toward the final
+    A single curved assignment that count towards the final
     grade. Common assignments include exams and projects. 
+
+    Attributes
+    ----------
+    weight : float
+        The weight of this assignment counting toward the
+        final grade
+    score : float
+        The score earned on this assignment
+    name : :obj:`str`, optional
+        Name of this assignment. Optional
+    upper : :obj:`float`, optional
+        The maximum score available of this assignment. Defaults
+        to 100.0
+    mu : float
+        The mean of this assignment. Required for curved assignments.
+    sigma : float
+        The standard deviation of this assignment. Required for
+        curved assignments.
+    zscore : :obj:`bool`, optional
+        Whether the score entered for this assignment is a zscore. Set
+        to true is this assignment is being clobbered. Defaults to False.
     """
 
     def __init__(self, weight: float, score: float, name: str = None, 
@@ -81,6 +140,19 @@ class UncurvedSingleAssignment(Assignment):
     """
     A single uncurved assignment that counts toward the final
     grade. Common assignments include exams and projects. 
+    
+    Attributes
+    ----------
+    weight : float
+        The weight of this assignment counting toward the
+        final grade
+    score : float
+        The score earned on this assignment
+    name : :obj:`str`, optional
+        Name of this assignment. Optional
+    upper : :obj:`float`, optional
+        The maximum score available of this assignment. Defaults
+        to 100.0
     """
 
     def __init__(self, weight: float, score: float, name: str = None, 
@@ -189,7 +261,7 @@ class CurvedAssignmentGroup(AssignmentGroup):
         detail["drop_applied"] = drop_applied
 
         return detail
-        
+
 
 class UncurvedAssignmentGroup(AssignmentGroup):
     """
@@ -247,6 +319,22 @@ class UncurvedAssignmentGroup(AssignmentGroup):
 
 
 class Course:
+    """
+    A course. Comprised of a list of assignments and/or assignment groups
+    that have defined weights that add up to 100%. Each component of
+    the final grade could be graded on absolute score or on a curved
+    basis. The correlation of each assignment is adjustable. 
+
+    Attributes
+    ----------
+    corr : float
+        The correlation coefficient with regards to each pair of
+        assignments. Defaults to 0.6, and could be adjusted higher
+        for a stronger correlation or vice versa. `corr = 0` is 
+        equivalent of assuming independence between each assignments.
+    name : :obj:`str`, optional
+        Name of this course. Defaults to 'My Course'.
+    """
 
     def __init__(self, corr: float = 0.6, name: str = None) -> None:
 
@@ -293,7 +381,7 @@ class Course:
         return self.components
 
 
-    def get_detail(self) -> dict:
+    def get_detail(self, show_boundary=False) -> dict:
         """
         Overall statistics of the course
         """
@@ -364,7 +452,10 @@ class Course:
             }
         else:
             true_boundaries = self.uncurved_boundaries
-        # print(true_boundaries)
+        
+        if show_boundary:
+            print("Letter grade boundaries:")
+            print(true_boundaries)
 
         for k, v in true_boundaries.items():
             letter_grade = k
