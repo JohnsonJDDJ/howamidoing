@@ -54,7 +54,6 @@ class Assignment:
         if zscore:
             self.zscore = score
             self.score = (self.zscore * self.sigma) + self.mu
-            self.score = self.score
         # Curved assignment.
         # Calculate z-score.
         elif curved:
@@ -97,6 +96,11 @@ class Assignment:
             }
 
         return detail
+
+    
+    def apply_clobber(self, score) -> None:
+        self.zscore = score
+        self.score = (self.zscore * self.sigma) + self.mu
 
 
 class CurvedSingleAssignment(Assignment):
@@ -342,7 +346,7 @@ class Course:
 
         self.corr = corr
         self.name = name if name else "My Course"
-        self.components = list()
+        self.components = dict()
 
         self.uncurved_boundaries = {
             "A+" : 0.97,
@@ -390,7 +394,7 @@ class Course:
         # Iterate over components:
         # Classify into curved and uncurved.
         # Compute the total weight.
-        for component in self.components:
+        for component in self.components.values():
             if component["curved"]: 
                 curved.append(component["object"])
                 contain_curved = True
@@ -468,7 +472,7 @@ class Course:
 
     def add_curved_single(self, weight: float, score: float, name: str = None,
                           upper: float = 100, mu: float = None, sigma: float = None,
-                          zscore=False) -> None:
+                          zscore=False) -> CurvedSingleAssignment:
 
         if name == None: name = "Assignment " + str(len(self.components) + 1)
         new_component = CurvedSingleAssignment(
@@ -482,11 +486,12 @@ class Course:
             "object": new_component
         }
 
-        self.components.append(info)
+        self.components[new_component] = info
+        return new_component
     
 
     def add_uncurved_single(self, weight: float, score: float, name: str = None, 
-                            upper: float = 100) -> None:
+                            upper: float = 100) -> UncurvedSingleAssignment:
         if name == None: name = "Assignment " + str(len(self.components) + 1)
         new_component = UncurvedSingleAssignment(
             weight, score, name, upper
@@ -499,7 +504,8 @@ class Course:
             "object": new_component
         }
 
-        self.components.append(info)
+        self.components[new_component] = info
+        return new_component
 
 
     def add_curved_group(self, weight: float, corr: float = None, 
@@ -516,8 +522,7 @@ class Course:
             "object": new_component
         }
 
-        self.components.append(info)
-
+        self.components[new_component] = info
         return new_component
 
 
@@ -533,6 +538,58 @@ class Course:
             "object": new_component
         }
 
-        self.components.append(info)
-
+        self.components[new_component] = info
         return new_component
+
+    
+    def apply_clobber(self, source, targets, capacity=-1) -> list:
+        
+        def argmin(iterable):
+            return min(enumerate(iterable), key=lambda x: x[1])[0]
+
+        if capacity == -1: capacity = len(targets)
+
+        # Check for errors: 
+        # (1) source in targets
+        # (2) assignemnt not in self.components
+        # (3) Assignment not curved
+        # (4) Assignment is grouped
+        if source in targets: raise ValueError("Source assignment cannot be in targets.")
+
+        if source not in self.components.keys(): raise ValueError("Source assignment not found.")
+        elif not self.components[source]["curved"]: raise ValueError("Source assignment is not curved.")
+        elif self.components[source]["grouped"]: raise ValueError("Source assignment must be single not grouped.")
+
+        for i, target in enumerate(targets):
+            if target not in self.components.keys(): raise ValueError(f"Target assignment at index {i} not found")
+            elif not self.components[target]["curved"]: raise ValueError(f"Target assignment at index {i} is not curved.")
+            elif self.components[target]["grouped"]: raise ValueError(f"Target assignment at index {i} must be single not grouped.")
+        print("Error check passed.")
+
+        # Fetch the zscores for clobbering
+        z_source = source.get_zscore()
+        z_targets = [i.get_zscore() for i in targets]
+        clobbered_assignments = []    
+        
+        # Apply clobber while we have capacity
+        while capacity != 0:
+            print("DEBUG", z_source, z_targets)
+            # Zscore from source is no longer larger than any zscore from targets
+            # Stop applying clobber
+            if all([z_source <= z for z in z_targets]): break
+
+            # Find the index of the assignment with minimum zscore.
+            # Pop that assignment from the targets list and apply clobber
+            min_index = argmin(z_targets)
+            min_assignment = targets.pop(min_index)
+            del z_targets[min_index]
+
+            min_assignment.apply_clobber(z_source)
+            clobbered_assignments.append(min_assignment)
+
+            capacity -= 1
+
+        return clobbered_assignments
+
+
+
