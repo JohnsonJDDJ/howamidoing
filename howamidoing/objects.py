@@ -7,9 +7,7 @@ class Assignment:
     A generic assignment. The primary definition of an assignment
     is the score. If the assignment is graded on a curved basis, then
     it also must be defined by the mean (`mu`) and standard deviation
-    (`sigma`). Additionally, the score could be replaced by a zscore
-    if the assignment is curved--in this case, this assignment is 
-    clobbered. This class is inaccessible from user.
+    (`sigma`). This class is inaccessible from user.
 
     Attributes
     ----------
@@ -28,19 +26,13 @@ class Assignment:
     curved : :obj:`bool`, optional
         Curved or not curved. Defaults to None. This attribute should
         not be accessible from user. 
-    zscore : :obj:`bool`, optional
-        Whether the score entered for this assignment is a zscore. Set
-        to true is this assignment is being clobbered. Defaults to False.
     """
 
     def __init__(self, score: float, name: str=None,
                  upper: float=100, mu: float=None, sigma: float=None,
-                 curved: bool=None, zscore=False) -> None:
+                 curved: bool=None) -> None:
         self.name = name
         self.upper = upper
-        
-        if zscore and not curved:
-            raise ValueError("Can't take zscore if not curved.")
         
         if curved and (mu == None or sigma == None):
             raise ValueError("Curved assignment must have mean and standard deviation.")
@@ -48,19 +40,14 @@ class Assignment:
         self.curved = curved
         self.mu = mu / self.upper if mu else None
         self.sigma = sigma / self.upper if sigma else None
+        self.clobbered = False
+        self.before_clobber = None
 
-        # Clobbered (z-score is provided).
-        # Calculate actual raw score.
-        if zscore:
-            self.zscore = score
-            self.score = (self.zscore * self.sigma) + self.mu
-        # Curved assignment.
-        # Calculate z-score.
-        elif curved:
+        # Curved assignment. Calculate z-score.
+        if curved:
             self.score = score / self.upper
             self.zscore = (self.score - self.mu) / self.sigma
-        # Un-curved assignment
-        # No zscore
+        # Un-curved assignment, zscore is 0.
         else:
             self.zscore = 0
             self.score = score / self.upper
@@ -85,7 +72,8 @@ class Assignment:
         """
         detail = dict()
         detail["score"] = self.score
-        
+        # For uncurved assignment, do not pass in
+        # any other stats except the score.
         if not self.curved:
             detail["stats"] = dict()
         else:
@@ -94,13 +82,24 @@ class Assignment:
                 "mu" : self.mu,
                 "sigma" : self.sigma
             }
-
         return detail
 
     
-    def apply_clobber(self, score) -> None:
-        self.zscore = score
+    def apply_clobber(self, zscore) -> None:
+        self.clobbered = True
+        self.before_clobber = {
+            "score": self.score,
+            "zscore": self.zscore
+        }
+        self.zscore = zscore
         self.score = (self.zscore * self.sigma) + self.mu
+
+
+    def revert_clobber(self) -> None:
+        self.clobbered = False
+        self.score = self.before_clobber["score"]
+        self.zscore = self.before_clobber["zscore"]
+        self.before_clobber = None
 
 
 class CurvedSingleAssignment(Assignment):
@@ -125,18 +124,14 @@ class CurvedSingleAssignment(Assignment):
     sigma : float
         The standard deviation of this assignment. Required for
         curved assignments.
-    zscore : :obj:`bool`, optional
-        Whether the score entered for this assignment is a zscore. Set
-        to true is this assignment is being clobbered. Defaults to False.
     """
 
     def __init__(self, weight: float, score: float, name: str = None, 
-                 upper: float = 100, mu: float = None, sigma: float = None, 
-                 zscore=False) -> None:
+                 upper: float = 100, mu: float = None, sigma: float = None) -> None:
 
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
-        super().__init__(score, name, upper, mu, sigma, curved=True, zscore=zscore)
+        super().__init__(score, name, upper, mu, sigma, curved=True)
         self.weight = weight
 
 
@@ -239,14 +234,13 @@ class CurvedAssignmentGroup(AssignmentGroup):
 
 
     def add_assignment(self, score: float, name: str=None,
-                       upper: float=100, mu: float=None, sigma: float=None,
-                       zscore=False) -> None:
+                       upper: float=100, mu: float=None, sigma: float=None) -> None:
         if name == None:
             name = "Assignment " + str(len(self.assignments) + 1)
 
         new_assignment = Assignment(score, name=name, 
                                     upper=upper, mu=mu, sigma=sigma, 
-                                    curved=True, zscore=zscore)
+                                    curved=True)
         self.assignments.append(new_assignment)
 
 
@@ -296,8 +290,8 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         return detail
 
 
-    def add_assignment(self, score: float, name: str=None,
-                       upper: float=100) -> None:
+    def add_assignment(self, score: float, name: str = None,
+                       upper: float = 100) -> None:
         if name == None:
             name = "Assignment " + str(len(self.assignments) + 1)
 
@@ -347,6 +341,7 @@ class Course:
         self.corr = corr
         self.name = name if name else "My Course"
         self.components = dict()
+        self.clobber_info = None
 
         self.uncurved_boundaries = {
             "A+" : 0.97,
@@ -471,12 +466,12 @@ class Course:
 
 
     def add_curved_single(self, weight: float, score: float, name: str = None,
-                          upper: float = 100, mu: float = None, sigma: float = None,
-                          zscore=False) -> CurvedSingleAssignment:
+                          upper: float = 100, mu: float = None, sigma: float = None
+                          ) -> CurvedSingleAssignment:
 
         if name == None: name = "Assignment " + str(len(self.components) + 1)
         new_component = CurvedSingleAssignment(
-            weight, score, name, upper, mu, sigma, zscore
+            weight, score, name, upper, mu, sigma
         )
 
         info = {
@@ -526,7 +521,8 @@ class Course:
         return new_component
 
 
-    def add_uncurved_group(self, weight: float, name: str = None, num_drops: int = 0) -> UncurvedAssignmentGroup:
+    def add_uncurved_group(self, weight: float, name: str = None, 
+                           num_drops: int = 0) -> UncurvedAssignmentGroup:
         
         if name == None: name = "Grouped Assignments " + str(len(self.components) + 1)
         new_component = UncurvedAssignmentGroup(weight, name, num_drops)
@@ -588,8 +584,20 @@ class Course:
             clobbered_assignments.append(min_assignment)
 
             capacity -= 1
+        
+        self.clobber_info = {
+            "source": source,
+            "targets": clobbered_assignments
+        }
 
         return clobbered_assignments
 
 
+    def revert_clobber(self):
+        if self.clobber_info is None:
+            raise AssertionError("Cannot revert if no clobber was applied.")
+        
+        for assignment in self.clobber_info["targets"]:
+            assignment.revert_clobber()
 
+        self.clobber_info = None
