@@ -1,5 +1,6 @@
 from math import isclose
 from scipy.stats import truncnorm
+import time
 from .utils import *
 
 class Assignment:
@@ -31,6 +32,7 @@ class Assignment:
     def __init__(self, score: float, name: str=None,
                  upper: float=100, mu: float=None, sigma: float=None,
                  curved: bool=None) -> None:
+        self.id = int(time.time() * 1000000 + id(self))
         self.name = name
         self.upper = upper
         
@@ -51,6 +53,11 @@ class Assignment:
         else:
             self.zscore = 0
             self.score = score / self.upper
+
+
+    def get_id(self) -> int:
+        """Return id"""
+        return self.id
 
 
     def get_score(self) -> float:
@@ -169,14 +176,19 @@ class AssignmentGroup:
 
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
-        self.assignments = list()
+        self.id = int(time.time() * 1000000 + id(self))
+        self.assignments = dict()
         self.weight = weight
         self.name = name
         self.num_drops = num_drops
 
-    
+
     def add_assignment(self) -> None:
         return NotImplementedError
+
+
+    def get_id(self) -> int:
+        return self.id
 
 
     def get_detail(self) -> dict():
@@ -241,11 +253,12 @@ class CurvedAssignmentGroup(AssignmentGroup):
         new_assignment = Assignment(score, name=name, 
                                     upper=upper, mu=mu, sigma=sigma, 
                                     curved=True)
-        self.assignments.append(new_assignment)
+        id = new_assignment.get_id()
+        self.assignments[id] = new_assignment
 
 
     def get_detail(self) -> dict():
-        assignments = self.assignments.copy()
+        assignments = self.assignments.values().copy()
         # sort assignments according to z-score
         assignments.sort(key= lambda i: i.get_zscore())
         # drop lowest num_drops assignments
@@ -296,11 +309,12 @@ class UncurvedAssignmentGroup(AssignmentGroup):
             name = "Assignment " + str(len(self.assignments) + 1)
 
         new_assignment = Assignment(score, name=name, upper=upper, curved=False)
-        self.assignments.append(new_assignment)
+        id = new_assignment.get_id()
+        self.assignments[id] = new_assignment
         
 
     def get_detail(self) -> dict():
-        assignments = self.assignments.copy()
+        assignments = self.assignments.values().copy()
         # sort assignments according to score
         assignments.sort(key= lambda i: i.get_score())
         # drop lowest num_drops assignments
@@ -376,7 +390,7 @@ class Course:
         }
 
 
-    def get_components(self) -> list:
+    def get_components(self) -> dict:
         return self.components
 
 
@@ -473,6 +487,7 @@ class Course:
         new_component = CurvedSingleAssignment(
             weight, score, name, upper, mu, sigma
         )
+        id = new_component.get_id()
 
         info = {
             "curved": True,
@@ -481,7 +496,7 @@ class Course:
             "object": new_component
         }
 
-        self.components[new_component] = info
+        self.components[id] = info
         return new_component
     
 
@@ -491,6 +506,7 @@ class Course:
         new_component = UncurvedSingleAssignment(
             weight, score, name, upper
         )
+        id = new_component.get_id()
 
         info = {
             "curved": False,
@@ -499,7 +515,7 @@ class Course:
             "object": new_component
         }
 
-        self.components[new_component] = info
+        self.components[id] = info
         return new_component
 
 
@@ -509,6 +525,7 @@ class Course:
         if corr == None: corr = self.corr
         if name == None: name = "Grouped Assignments " + str(len(self.components) + 1)
         new_component = CurvedAssignmentGroup(weight, corr, name, num_drops)
+        id = new_component.get_id()
 
         info = {
             "curved": True,
@@ -517,7 +534,7 @@ class Course:
             "object": new_component
         }
 
-        self.components[new_component] = info
+        self.components[id] = info
         return new_component
 
 
@@ -526,6 +543,7 @@ class Course:
         
         if name == None: name = "Grouped Assignments " + str(len(self.components) + 1)
         new_component = UncurvedAssignmentGroup(weight, name, num_drops)
+        id = new_component.get_id()
 
         info = {
             "curved": False,
@@ -534,19 +552,19 @@ class Course:
             "object": new_component
         }
 
-        self.components[new_component] = info
+        self.components[id] = info
         return new_component
 
     
-    def apply_clobber(self, source, targets, capacity=-1) -> list:
+    def apply_clobber(self, source: int, targets: list, capacity: int = -1) -> None:
         # Check for errors:
-        #  - Other clobber already applied
+        #  - Other clobber already applied: revert automatically
         #  - Source in targets
         #  - Assignemnt not in self.components
         #  - Assignment not curved
         #  - Assignment is grouped
         if self.clobber_info is not None:
-            raise AssertionError("Another clobber already applied. Try revert_clobber()")
+            self.revert_clobber()
 
         if source in targets: raise ValueError("Source assignment cannot be in targets.")
 
@@ -563,9 +581,13 @@ class Course:
         def argmin(iterable):
             return min(enumerate(iterable), key=lambda x: x[1])[0]
 
+        # Convert id into objects
+        source = self.components[source]["object"]
+        targets = [self.components[target]["object"] for target in targets]
+        
         # Fetch the zscores for clobbering
         z_source = source.get_zscore()
-        z_targets = [i.get_zscore() for i in targets]
+        z_targets = [target.get_zscore() for target in targets]
         clobbered_assignments = []    
         
         # Apply clobber while we have capacity
@@ -581,16 +603,14 @@ class Course:
             del z_targets[min_index]
 
             min_assignment.apply_clobber(z_source)
-            clobbered_assignments.append(min_assignment)
+            clobbered_assignments.append(min_assignment.get_id())
 
             capacity -= 1
         
         self.clobber_info = {
-            "source": source,
+            "source": source.get_id(),
             "targets": clobbered_assignments
         }
-
-        return clobbered_assignments
 
 
     def revert_clobber(self):
@@ -598,6 +618,7 @@ class Course:
             raise AssertionError("Cannot revert if no clobber was applied.")
         
         for assignment in self.clobber_info["targets"]:
+            assignment = self.components[assignment]["object"]
             assignment.revert_clobber()
 
         self.clobber_info = None
