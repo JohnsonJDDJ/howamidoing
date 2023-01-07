@@ -1,2 +1,2 @@
-from ..howamidoing import *
+from . import *
 
