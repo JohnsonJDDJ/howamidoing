@@ -539,17 +539,15 @@ class Course:
 
     
     def apply_clobber(self, source, targets, capacity=-1) -> list:
-        
-        def argmin(iterable):
-            return min(enumerate(iterable), key=lambda x: x[1])[0]
+        # Check for errors:
+        #  - Other clobber already applied
+        #  - Source in targets
+        #  - Assignemnt not in self.components
+        #  - Assignment not curved
+        #  - Assignment is grouped
+        if self.clobber_info is not None:
+            raise AssertionError("Another clobber already applied. Try revert_clobber()")
 
-        if capacity == -1: capacity = len(targets)
-
-        # Check for errors: 
-        # (1) source in targets
-        # (2) assignemnt not in self.components
-        # (3) Assignment not curved
-        # (4) Assignment is grouped
         if source in targets: raise ValueError("Source assignment cannot be in targets.")
 
         if source not in self.components.keys(): raise ValueError("Source assignment not found.")
@@ -560,7 +558,10 @@ class Course:
             if target not in self.components.keys(): raise ValueError(f"Target assignment at index {i} not found")
             elif not self.components[target]["curved"]: raise ValueError(f"Target assignment at index {i} is not curved.")
             elif self.components[target]["grouped"]: raise ValueError(f"Target assignment at index {i} must be single not grouped.")
-        # print("Error check passed.")
+
+        if capacity == -1: capacity = len(targets)
+        def argmin(iterable):
+            return min(enumerate(iterable), key=lambda x: x[1])[0]
 
         # Fetch the zscores for clobbering
         z_source = source.get_zscore()
@@ -569,7 +570,6 @@ class Course:
         
         # Apply clobber while we have capacity
         while capacity != 0:
-            # print("DEBUG", z_source, z_targets)
             # Zscore from source is no longer larger than any zscore from targets
             # Stop applying clobber
             if all([z_source <= z for z in z_targets]): break
