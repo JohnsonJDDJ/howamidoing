@@ -258,7 +258,10 @@ class CurvedAssignmentGroup(AssignmentGroup):
 
 
     def get_detail(self) -> dict():
-        assignments = self.assignments.values().copy()
+
+        if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
+
+        assignments = list(self.assignments.values())
         # sort assignments according to z-score
         assignments.sort(key= lambda i: i.get_zscore())
         # drop lowest num_drops assignments
@@ -314,7 +317,10 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         
 
     def get_detail(self) -> dict():
-        assignments = self.assignments.values().copy()
+
+        if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
+
+        assignments = list(self.assignments.values())
         # sort assignments according to score
         assignments.sort(key= lambda i: i.get_score())
         # drop lowest num_drops assignments
