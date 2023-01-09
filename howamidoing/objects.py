@@ -63,6 +63,8 @@ class Assignment:
             self.zscore = 0
             self.score = score / self.upper
 
+        self.weight = None # Undefined in this class
+
 
     def get_id(self) -> int:
         """Return id"""
@@ -85,6 +87,11 @@ class Assignment:
         Return zscore for curved assignments.
         """
         return self.zscore if self.curved else self.score
+
+        
+    def get_weight(self) -> float:
+        """Return weight"""
+        return self.weight
 
         
     def get_detail(self) -> dict:
@@ -165,11 +172,6 @@ class CurvedSingleAssignment(Assignment):
         super().__init__(score, name, upper, mu, sigma, curved=True)
         self.weight = weight
 
-    
-    def get_weight(self) -> float:
-        """Return weight"""
-        return self.weight
-
 
 class UncurvedSingleAssignment(Assignment):
     """
@@ -202,11 +204,6 @@ class UncurvedSingleAssignment(Assignment):
 
         super().__init__(score, name, upper, curved=False)
         self.weight = weight
-
-
-    def get_weight(self) -> float:
-        """Return weight"""
-        return self.weight
 
 
 class AssignmentGroup:
