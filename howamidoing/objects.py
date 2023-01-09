@@ -1,6 +1,8 @@
+from collections.abc import Iterable
 from math import isclose
 from scipy.stats import truncnorm
 import time
+from typing import Dict, Union
 from .utils import *
 
 class Assignment:
@@ -29,9 +31,16 @@ class Assignment:
         not be accessible from user. 
     """
 
-    def __init__(self, score: float, name: str=None,
-                 upper: float=100, mu: float=None, sigma: float=None,
-                 curved: bool=None) -> None:
+    def __init__(
+        self, 
+        score: float, 
+        name: str = None,
+        upper: float = 100, 
+        mu: float = None,
+        sigma: float = None,
+        curved: bool = None
+    ) -> None:
+
         self.id = int(time.time() * 1000000 + id(self))
         self.name = name
         self.upper = upper
@@ -69,6 +78,14 @@ class Assignment:
         """Return zscore"""
         return self.zscore
 
+    
+    def get_primary_score(self) -> float:
+        """
+        Return score for uncurved assignments.
+        Return zscore for curved assignments.
+        """
+        return self.zscore if self.curved else self.score
+
         
     def get_detail(self) -> dict:
         """
@@ -92,7 +109,7 @@ class Assignment:
         return detail
 
     
-    def apply_clobber(self, zscore) -> None:
+    def apply_clobber(self, zscore: float) -> None:
         self.clobbered = True
         self.before_clobber = {
             "score": self.score,
@@ -133,13 +150,25 @@ class CurvedSingleAssignment(Assignment):
         curved assignments.
     """
 
-    def __init__(self, weight: float, score: float, name: str = None, 
-                 upper: float = 100, mu: float = None, sigma: float = None) -> None:
+    def __init__(
+        self, 
+        weight: float, 
+        score: float, 
+        name: str = None, 
+        upper: float = 100, 
+        mu: float = None, 
+        sigma: float = None
+        ) -> None:
 
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
         super().__init__(score, name, upper, mu, sigma, curved=True)
         self.weight = weight
+
+    
+    def get_weight(self) -> float:
+        """Return weight"""
+        return self.weight
 
 
 class UncurvedSingleAssignment(Assignment):
@@ -161,8 +190,13 @@ class UncurvedSingleAssignment(Assignment):
         to 100.0
     """
 
-    def __init__(self, weight: float, score: float, name: str = None, 
-                 upper: float = 100) -> None:
+    def __init__(
+        self, 
+        weight: float, 
+        score: float, 
+        name: str = None, 
+        upper: float = 100
+    ) -> None:
 
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
@@ -170,9 +204,19 @@ class UncurvedSingleAssignment(Assignment):
         self.weight = weight
 
 
+    def get_weight(self) -> float:
+        """Return weight"""
+        return self.weight
+
+
 class AssignmentGroup:
     
-    def __init__(self, weight: float, name: str = None, num_drops: int = 0) -> None:
+    def __init__(
+        self,
+        weight: float,
+        name: str = None, 
+        num_drops: int = 0
+    ) -> None:
 
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
@@ -190,17 +234,48 @@ class AssignmentGroup:
     def get_id(self) -> int:
         return self.id
 
-
-    def get_detail(self) -> dict():
-        return NotImplementedError
+    
+    def get_assignments(self) -> Dict[int, Assignment]:
+        return self.assignments
 
     
-    def get_assignments(self) -> list:
-        return self.assignments
+    def get_weight(self) -> float:
+        return self.weight
 
 
     def get_num_drops(self) -> int:
         return self.num_drops
+
+
+    def _apply_drop(self) -> tuple[Iterable[Assignment], bool]:
+        """Drop lowest scores according to self.num_drops"""
+        assignments = list(self.assignments.values())
+        # sort assignments according to primary score
+        assignments.sort(key=lambda x: x.get_primary_score())
+        # drop lowest num_drops assignments
+        if len(assignments) > self.num_drops:
+            assignments = assignments[self.num_drops:]
+            drop_applied = True
+        else:
+            drop_applied = False
+
+        return assignments, drop_applied
+    
+
+    def _calculate_details(self, assignments: Iterable[Assignment]) -> float:
+        """Calculate the summary detail of assignments"""
+        return NotImplementedError
+
+
+    def get_detail(self) -> dict():
+
+        if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
+
+        assignments, drop_applied = self._apply_drop()
+        detail = self._calculate_details(assignments)
+        detail["drop_applied"] = drop_applied
+
+        return detail
 
 
 class CurvedAssignmentGroup(AssignmentGroup):
@@ -210,15 +285,35 @@ class CurvedAssignmentGroup(AssignmentGroup):
     rare, it is possible to apply clobber onto assignments.
     """
     
-    def __init__(self, weight: float, corr: float = 0.6, 
-                 name: str = None, num_drops: int = 0) -> None:
+    def __init__(
+        self, 
+        weight: float, 
+        corr: float = 0.6, 
+        name: str = None, 
+        num_drops: int = 0
+    ) -> None:
 
         super().__init__(weight, name, num_drops)
         self.corr = corr
 
 
-    def calculate_details(self, assignments:set) -> float:
-            
+    def add_assignment(self, score: float, name: str=None,
+                       upper: float=100, mu: float=None, sigma: float=None) -> None:
+
+        if name == None: name = "Assignment " + str(len(self.assignments) + 1)
+
+        new_assignment = Assignment(score, name=name, 
+                                    upper=upper, mu=mu, sigma=sigma, 
+                                    curved=True)
+        id = new_assignment.get_id()
+        self.assignments[id] = new_assignment
+
+
+    def _calculate_details(self, assignments: Iterable[Assignment]) -> float:
+        """
+        Calculate averaged score, mu and sigma. Then
+        calculate zscore.
+        """
         final_mu, final_sigma, final_score = 0, 0, 0
         n = len(assignments)
 
@@ -245,38 +340,6 @@ class CurvedAssignmentGroup(AssignmentGroup):
         return detail
 
 
-    def add_assignment(self, score: float, name: str=None,
-                       upper: float=100, mu: float=None, sigma: float=None) -> None:
-        if name == None:
-            name = "Assignment " + str(len(self.assignments) + 1)
-
-        new_assignment = Assignment(score, name=name, 
-                                    upper=upper, mu=mu, sigma=sigma, 
-                                    curved=True)
-        id = new_assignment.get_id()
-        self.assignments[id] = new_assignment
-
-
-    def get_detail(self) -> dict():
-
-        if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
-
-        assignments = list(self.assignments.values())
-        # sort assignments according to z-score
-        assignments.sort(key= lambda i: i.get_zscore())
-        # drop lowest num_drops assignments
-        if len(assignments) > self.num_drops:
-            assignments = assignments[self.num_drops:]
-            drop_applied = True
-        else:
-            drop_applied = False
-
-        detail = self.calculate_details(assignments)
-        detail["drop_applied"] = drop_applied
-
-        return detail
-
-
 class UncurvedAssignmentGroup(AssignmentGroup):
     """
     Each assignment in this group is curved and weighted equally. Assignents 
@@ -284,13 +347,28 @@ class UncurvedAssignmentGroup(AssignmentGroup):
     rare, it is possible to apply clobber onto assignments.
     """
     
-    def __init__(self, weight: float, 
-                 name: str = None, num_drops: int = 0) -> None:
+    def __init__(
+        self, 
+        weight: float, 
+        name: str = None, 
+        num_drops: int = 0
+    ) -> None:
                  
-        super().__init__(weight, name, num_drops)
+        super().__init__(weight, name, num_drops) 
+
+
+    def add_assignment(self, score: float, name: str = None,
+                       upper: float = 100) -> None:
+
+        if name == None: name = "Assignment " + str(len(self.assignments) + 1)
+
+        new_assignment = Assignment(score, name=name, upper=upper, curved=False)
+        id = new_assignment.get_id()
+        self.assignments[id] = new_assignment
         
 
-    def calculate_details(self, assignments:set) -> float:
+    def _calculate_details(self, assignments: Iterable[Assignment]) -> float:
+        """Calculate averaged score"""
         final_score = 0
         n = len(assignments)
 
@@ -302,36 +380,6 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         detail = dict()
         detail["score"] = final_score
         detail["stats"] = dict()
-
-        return detail
-
-
-    def add_assignment(self, score: float, name: str = None,
-                       upper: float = 100) -> None:
-        if name == None:
-            name = "Assignment " + str(len(self.assignments) + 1)
-
-        new_assignment = Assignment(score, name=name, upper=upper, curved=False)
-        id = new_assignment.get_id()
-        self.assignments[id] = new_assignment
-        
-
-    def get_detail(self) -> dict():
-
-        if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
-
-        assignments = list(self.assignments.values())
-        # sort assignments according to score
-        assignments.sort(key= lambda i: i.get_score())
-        # drop lowest num_drops assignments
-        if len(assignments) > self.num_drops:
-            assignments = assignments[self.num_drops:]
-            drop_applied = True
-        else:
-            drop_applied = False
-        
-        detail = self.calculate_details(assignments)
-        detail["drop_applied"] = drop_applied
 
         return detail
 
@@ -353,6 +401,13 @@ class Course:
     name : :obj:`str`, optional
         Name of this course. Defaults to 'My Course'.
     """
+
+    Component = Union[
+        CurvedAssignmentGroup, 
+        UncurvedAssignmentGroup,
+        CurvedSingleAssignment,
+        UncurvedSingleAssignment
+    ]
 
     def __init__(self, corr: float = 0.6, name: str = None) -> None:
 
@@ -396,76 +451,119 @@ class Course:
         }
 
 
-    def get_components(self) -> dict:
+    def get_components(self) -> Dict[int, Component]:
         return self.components
 
 
-    def get_detail(self, show_boundary=False) -> dict:
+    def _calculate_curved_detail(
+        self, 
+        assignments: Iterable[Component]
+    ) -> dict[str, float]:
+        """
+        Calculate weighted score, mu, sigma and zscore 
+        for curved components
+        """
+        curved = {
+            "score": 0,
+            "mu": 0,
+            "sigma": 0,
+            "zscore": 0
+            }
+
+        if len(assignments) == 0: return detail
+        for component in assignments:
+            detail = component.get_detail()
+            curved["score"] += detail["score"] * component.get_weight()
+            curved["mu"] += detail["stats"]["mu"] * component.get_weight()
+            curved["sigma"] = correlated_sigma_sum(
+                curved["sigma"],
+                detail["stats"]["sigma"] * component.get_weight(),
+                self.corr
+            )
+        curved["zscore"] = (curved["score"] - curved["mu"]) / curved["sigma"]
+
+        return curved
+
+
+    def _calculate_uncurved_detail(
+        self,
+        assignments: Iterable[Component]
+    ) -> float:
+        """Calculate weighted score for uncurved components"""
+        uncurved_score = 0
+        for component in assignments:
+            detail = component.get_detail()
+            uncurved_score += detail["score"] * component.get_weight()
+        return uncurved_score
+
+
+    def _calculate_detail(
+        self,
+        curved: Iterable[Component],
+        uncurved: Iterable[Component],
+        total: float
+    ) -> dict:
+        """
+        Calculte weighted scores, mu, sigma and zscore for
+        all assignments
+        """
+        # Combine everthing
+        curved_info = self._calculate_curved_detail(curved)
+        uncurved_score = self._calculate_uncurved_detail(uncurved)
+
+        overall_score = curved_info["score"] + uncurved_score
+        final_score = overall_score / total
+
+        overall_mu = curved_info["mu"] + uncurved_score
+        final_mu = overall_mu / total
+
+        final_sigma = curved_info["sigma"] / total
+        
+        detail = dict()
+        detail["score"] = final_score
+        detail["stats"] = {
+            "zscore" : curved_info["zscore"],
+            "mu" : final_mu,
+            "sigma" : final_sigma
+        }
+
+        return detail
+
+
+    def get_detail(self) -> dict:
         """
         Overall statistics of the course
         """
-        total, curved, uncurved = 0, [], []
-        contain_curved = False
         # Iterate over components:
         # Classify into curved and uncurved.
         # Compute the total weight.
+        total, curved, uncurved = 0, [], []
         for component in self.components.values():
             if component["curved"]: 
                 curved.append(component["object"])
-                contain_curved = True
             else: uncurved.append(component["object"])
             total += component["weight"]
             if total > 1.0: raise ValueError("Total weight exceeds one.")
         
         # Check if the weights are incomplete
         is_final = isclose(total, 1.0)
-        
-        # First compute overall z-score for curved assignments
-        curved_mu, curved_sigma, curved_score = 0, 0, 0
-        for component in curved:
-            detail = component.get_detail()
-            curved_mu += detail["stats"]["mu"] * component.weight
-            curved_score += detail["score"] * component.weight
-            curved_sigma = correlated_sigma_sum(
-                curved_sigma,
-                detail["stats"]["sigma"] * component.weight,
-                self.corr
-            )
 
-        # Compute z-score only if curved assignments exist
-        final_zscore = 0
-        if contain_curved:
-            final_zscore = (curved_score - curved_mu) / curved_sigma
-
-        # Then compute the uncurved score
-        uncurved_score = 0
-        for component in uncurved:
-            detail = component.get_detail()
-            uncurved_score += detail["score"] * component.weight
-
-        # Combine everthing
-        overall_score = curved_score + uncurved_score
-        final_score = overall_score / total
-
-        overall_mu = curved_mu + uncurved_score
-        final_mu = overall_mu / total
-
-        final_sigma = curved_sigma / total
-        
-        detail = dict()
-        detail["score"] = final_score
-        detail["stats"] = {
-            "zscore" : final_zscore,
-            "mu" : final_mu,
-            "sigma" : final_sigma
-        }
-        detail["curved"] = contain_curved
+        detail = self._calculate_detail(curved, uncurved, total)        
+        detail["curved"] = bool(len(curved))
         detail["is_final"] = is_final
 
+        return detail
+
+
+    def get_grade(self, show_boundary=False) -> str:
+        """Calclate the letter grade for ths course"""
         # Calculate letter grade using scipy.stat.truncnorm
-        if contain_curved:
-            a, b = (0 - final_mu) / final_sigma, (1 - final_mu) / final_sigma
-            X = truncnorm(a, b, loc=final_mu, scale=final_sigma)
+        detail = self.get_detail()
+
+        if detail["curved"]:
+            a = (0 - detail["stats"]["mu"]) / detail["stats"]["sigma"]
+            b = (1 - detail["stats"]["mu"]) / detail["stats"]["sigma"]
+            X = truncnorm(a, b, loc=detail["stats"]["mu"], scale=detail["stats"]["sigma"])
             true_boundaries = {
                 k: X.ppf(v) for k,v in self.curved_boundaries.items()
             }
@@ -478,11 +576,10 @@ class Course:
 
         for k, v in true_boundaries.items():
             letter_grade = k
-            if final_score >= v:
+            if detail["score"] >= v:
                 break
-        detail["letter_grade"] = letter_grade
         
-        return detail
+        return letter_grade
 
 
     def add_curved_single(self, weight: float, score: float, name: str = None,
@@ -562,7 +659,11 @@ class Course:
         return new_component
 
     
-    def apply_clobber(self, source: int, targets: list, capacity: int = -1) -> None:
+    def apply_clobber(
+        self, source: int, 
+        targets: list[int], 
+        capacity: int = -1
+    ) -> None:
         # Check for errors:
         #  - Other clobber already applied: revert automatically
         #  - Source in targets
