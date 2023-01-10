@@ -1,7 +1,6 @@
 from collections.abc import Iterable
 from math import isclose
 from scipy.stats import truncnorm
-import time
 from typing import Dict, Union
 from .utils import *
 
@@ -41,7 +40,7 @@ class Assignment:
         curved: bool = None
     ) -> None:
 
-        self.id = int(time.time() * 1000000 + id(self))
+        self.id = generate_id(self)
         self.name = name
         self.upper = upper
         
@@ -217,7 +216,7 @@ class AssignmentGroup:
 
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
-        self.id = int(time.time() * 1000000 + id(self))
+        self.id = generate_id(self)
         self.assignments = dict()
         self.weight = weight
         self.name = name
