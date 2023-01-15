@@ -1,6 +1,6 @@
 from time import time
 
-def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float):
+def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
     """
     Compute the standard deviation of the sum of two normally
     distributed random variables with correlation coefficient
@@ -11,7 +11,7 @@ def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float):
     return (first_term + second_term) ** 0.5
 
 
-def generate_id(object):
+def generate_id(object) -> int:
     """Generate an uniqe id for an object"""
     # Code motivated by chatGPT, 2022
     # chat.openai.com

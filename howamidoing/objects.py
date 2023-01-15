@@ -126,6 +126,7 @@ class Assignment:
 
 
     def revert_clobber(self) -> None:
+        if not self.clobbered: return
         self.clobbered = False
         self.score = self.before_clobber["score"]
         self.zscore = self.before_clobber["zscore"]
