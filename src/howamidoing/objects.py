@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from math import isclose
+import pickle
 from scipy.stats import truncnorm
 from typing import Union
 from .utils import *
@@ -63,6 +64,12 @@ class Assignment:
             self.score = score / self.upper
 
         self.weight = None # Undefined in this class
+
+
+    def __repr__(self) -> str:
+        repr = f"Assignment {self.id}"
+        if self.name: repr += f" ({self.name})"
+        return f"<{repr}>"
 
 
     def get_id(self) -> int:
@@ -226,6 +233,12 @@ class AssignmentGroup:
         self.weight = weight
         self.name = name
         self.num_drops = num_drops
+
+
+    def __repr__(self) -> str:
+        repr = f"Assignment Group {self.id}"
+        if self.name: repr += f" ({self.name})"
+        return f"<{repr}>"
 
 
     def add_assignment(self) -> None:
@@ -414,6 +427,7 @@ class Course:
 
         if corr < 0 or corr > 1.0: raise ValueError(f"Invalid correlation coefficient: {corr}.")
 
+        self.id = generate_id(self)
         self.corr = corr
         self.name = name if name else "My Course"
         self.components = dict()
@@ -452,7 +466,18 @@ class Course:
         }
 
 
-    def get_components(self) -> dict[int, Component]:
+    def __repr__(self) -> str:
+        repr = f"Course {self.id}"
+        if self.name: repr += f" ({self.name})"
+        return f"<{repr}>"
+
+
+    def get_id(self) -> int:
+        """Return id"""
+        return self.id
+
+
+    def get_components(self) -> dict[int, dict]:
         return self.components
 
 
@@ -721,12 +746,56 @@ class Course:
         }
 
 
-    def revert_clobber(self):
-        if self.clobber_info is None:
-            raise AssertionError("Cannot revert if no clobber was applied.")
-        
+    def revert_clobber(self) -> None:   
         for assignment in self.clobber_info["targets"]:
             assignment = self.components[assignment]["object"]
             assignment.revert_clobber()
-
         self.clobber_info = None
+
+
+class Profile():
+    """
+    A user's profile is a container for `Courses`. This object
+    is used for packaging a user's data. The profile
+    is at the top of the hierarchy for objects related to 
+    `howamidoing`.
+    """
+
+    
+    def __init__(self) -> None:
+        self.courses = {}
+            
+
+    def __repr__(self) -> str:
+        return self.courses.__repr__()
+
+    
+    def __getitem__(self, key: int) -> Course:
+        return self.courses[key]
+
+
+    def __delitem__(self, key: int) -> None:
+        del self.courses[key]
+
+    
+    def get_courses(self) -> dict[int, Course]:
+        return self.courses
+
+    
+    def add_course(self, corr: float = 0.6, name: str = None) -> Course:
+        """Create a new course"""
+        if name is None: name = "Course " + str(len(self.courses) + 1)
+        new_course = Course(corr, name)
+        self.courses[new_course.get_id()] = new_course
+        return new_course
+
+    
+    def load(self, path: str) -> None:
+        with open(path, "rb") as f:
+            profile = pickle.load(f)
+        self.courses = profile.get_courses()
+
+
+    def dump(self, path: str) -> None:
+        with open(path, "wb") as f:
+            pickle.dump(self, f)
