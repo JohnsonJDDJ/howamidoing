@@ -27,6 +27,13 @@ def _check_detail_struct(detail: dict, curved: bool):
 # =================
 # Test Assignment
 # =================
+def test_id():
+    """Id should be unique"""
+    a1 = Assignment(50, curved=False)
+    a2 = Assignment(50, curved=False)
+    a3 = Assignment(50, curved=False)
+    assert a1.get_id() != a2.get_id()
+    assert a2.get_id() != a3.get_id()
 
 def test_score():
     """Test calculation for scores"""

@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from math import isclose
 from scipy.stats import truncnorm
-from typing import Dict, Union
+from typing import Union
 from .utils import *
 
 class Assignment:
@@ -232,7 +232,7 @@ class AssignmentGroup:
         return self.id
 
     
-    def get_assignments(self) -> Dict[int, Assignment]:
+    def get_assignments(self) -> dict[int, Assignment]:
         return self.assignments
 
     
@@ -259,12 +259,12 @@ class AssignmentGroup:
         return assignments, drop_applied
     
 
-    def _calculate_details(self, assignments: Iterable[Assignment]) -> float:
+    def _calculate_details(self, assignments: Iterable[Assignment]) -> dict:
         """Calculate the summary detail of assignments"""
         return NotImplementedError
 
 
-    def get_detail(self) -> dict():
+    def get_detail(self) -> dict:
 
         if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
 
@@ -306,7 +306,7 @@ class CurvedAssignmentGroup(AssignmentGroup):
         self.assignments[id] = new_assignment
 
 
-    def _calculate_details(self, assignments: Iterable[Assignment]) -> float:
+    def _calculate_details(self, assignments: Iterable[Assignment]) -> dict:
         """
         Calculate averaged score, mu and sigma. Then
         calculate zscore.
@@ -364,7 +364,7 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         self.assignments[id] = new_assignment
         
 
-    def _calculate_details(self, assignments: Iterable[Assignment]) -> float:
+    def _calculate_details(self, assignments: Iterable[Assignment]) -> dict:
         """Calculate averaged score"""
         final_score = 0
         n = len(assignments)
@@ -448,7 +448,7 @@ class Course:
         }
 
 
-    def get_components(self) -> Dict[int, Component]:
+    def get_components(self) -> dict[int, Component]:
         return self.components
 
 
