@@ -116,6 +116,10 @@ class Assignment:
 
     
     def apply_clobber(self, zscore: float) -> None:
+        # Revert to original if already clobbered
+        if self.clobbered:
+            self.revert_clobber()
+        
         self.clobbered = True
         self.before_clobber = {
             "score": self.score,

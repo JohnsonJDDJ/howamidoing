@@ -14,7 +14,7 @@ def _check_detail_struct(detail: dict, curved: bool):
     if not curved:
         assert "score" in detail
         assert "stats" in detail
-        assert detail["stats"] is None
+        assert detail["stats"] == {}
     else:
         assert "score" in detail
         assert "stats" in detail
@@ -82,10 +82,12 @@ def test_detail():
     a2 = Assignment(-20, mu=50, sigma=10, curved=True)
     detail = a2.get_detail()
     _check_detail_struct(detail, a2.curved)
+    # Everything in stats  except zscore should 
+    # be normalized by `upper`, which is 100.
     assert isclose(detail["score"], -0.2)
-    assert isclose(detail["stata"]["zscore"], -7)
-    assert isclose(detail["stata"]["mu"], 50)
-    assert isclose(detail["stata"]["sigma"], 10)
+    assert isclose(detail["stats"]["zscore"], -7)
+    assert isclose(detail["stats"]["mu"], 0.5)
+    assert isclose(detail["stats"]["sigma"], 0.1)
 
 
 def test_simple_clobber():
@@ -93,12 +95,12 @@ def test_simple_clobber():
     a1 = Assignment(50, mu=50, sigma=10, curved=True)
     a1.apply_clobber(1)
     assert isclose(a1.get_zscore(), 1)
-    assert isclose(a1.get_score(), 60)
+    assert isclose(a1.get_score(), 0.6)
 
     a2 = Assignment(50, mu=50, sigma=10, curved=True)
     a2.apply_clobber(-1)
     assert isclose(a2.get_zscore(), -1)
-    assert isclose(a2.get_score(), 40)
+    assert isclose(a2.get_score(), 0.4)
 
 
 def test_clobber_and_reverts():
@@ -108,10 +110,10 @@ def test_clobber_and_reverts():
     a.apply_clobber(1)
     # Only the last clobber should be effective
     assert isclose(a.get_zscore(), 1)
-    assert isclose(a.get_score(), 60)
+    assert isclose(a.get_score(), 0.6)
     # Revert the clobbse
     a.revert_clobber()
     assert isclose(a.get_zscore(), 0)
-    assert isclose(a.get_score(), 50)
+    assert isclose(a.get_score(), 0.5)
     # Revert again should not throw error
     a.revert_clobber()

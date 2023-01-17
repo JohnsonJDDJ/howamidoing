@@ -15,4 +15,4 @@ def generate_id(object) -> int:
     """Generate an uniqe id for an object"""
     # Code motivated by chatGPT, 2022
     # chat.openai.com
-    int(time() * 1000000 + id(object))
+    return int(time() * 1000000 + id(object))
