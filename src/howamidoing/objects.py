@@ -72,6 +72,40 @@ class Assignment:
         return f"<{repr}>"
 
 
+    def _to_json(self) -> dict:
+        """Convert all data to dictionary"""
+        output = {
+            "id" : self.id,
+            "name" : self.name,
+            "weight" : self.weight,
+            "score" : self.score,
+            "upper" : self.upper,
+            "curved" : self.curved,
+            "mu" : self.mu,
+            "sigma" : self.sigma,
+            "zscore" : self.zscore,
+            "clobbered" : self.clobbered,
+            "before_clobber" : self.before_clobber,
+            "class" : "Assignment"
+        }
+        return output
+
+    
+    def _from_json(self, json: dict) -> None:
+        """Load and override all data from dictionary"""
+        self.id = json["id"]
+        self.name = json["name"]
+        self.weight = json["weight"]
+        self.score = json["score"]
+        self.upper = json["upper"]
+        self.curved = json["curved"]
+        self.mu = json["mu"]
+        self.sigma = json["sigma"]
+        self.zscore = json["zscore"]
+        self.clobbered = json["clobbered"]
+        self.before_clobber = json["before_clobber"]
+
+
     def get_id(self) -> int:
         """Return id"""
         return self.id
