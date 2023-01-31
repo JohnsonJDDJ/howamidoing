@@ -1,7 +1,6 @@
 from collections.abc import Iterable
 from copy import deepcopy
 from math import isclose
-import pickle
 from scipy.stats import truncnorm
 from typing import Union
 from .utils import *
@@ -39,8 +38,14 @@ class Assignment:
         upper: float = 100, 
         mu: float = None,
         sigma: float = None,
-        curved: bool = None
+        curved: bool = None,
+        override_json: dict = None
     ) -> None:
+
+        # Overriding all steps using data from dictionary
+        if override_json is not None:
+            self._from_json(override_json)
+            return
 
         self.id = generate_id(self)
         self.name = name
@@ -210,13 +215,17 @@ class CurvedSingleAssignment(Assignment):
         name: str = None, 
         upper: float = 100, 
         mu: float = None, 
-        sigma: float = None
-        ) -> None:
-
-        if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
-
-        super().__init__(score, name, upper, mu, sigma, curved=True)
-        self.weight = weight
+        sigma: float = None,
+        override_json: dict = None
+    ) -> None:
+        if weight > 1.0 or weight <= 0: 
+            raise ValueError(f"Invalid weight: {weight}.")
+        super().__init__(score, name, upper, mu, sigma, True, override_json)
+        # When override_json is used, weight will be a dummy
+        # value. Thus only assign weight when override_json
+        # is not used.
+        if override_json is None:
+            self.weight = weight
 
 
     def _to_json(self) -> dict:
@@ -249,13 +258,17 @@ class UncurvedSingleAssignment(Assignment):
         weight: float, 
         score: float, 
         name: str = None, 
-        upper: float = 100
+        upper: float = 100,
+        override_json: dict = None
     ) -> None:
-
-        if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
-
-        super().__init__(score, name, upper, curved=False)
-        self.weight = weight
+        if weight > 1.0 or weight <= 0: 
+            raise ValueError(f"Invalid weight: {weight}.")
+        super().__init__(score, name, upper, curved=False, override_json=override_json)
+        # When override_json is used, weight will be a dummy
+        # value. Thus only assign weight when override_json
+        # is not used.
+        if override_json is None:
+            self.weight = weight
 
 
     def _to_json(self) -> dict:
@@ -270,16 +283,23 @@ class AssignmentGroup:
         self,
         weight: float,
         name: str = None, 
-        num_drops: int = 0
+        corr: float = None,
+        num_drops: int = 0,
+        override_json: dict = None
     ) -> None:
+        # Overriding all step with data from dictionary
+        if override_json is not None:
+            self._from_json(override_json)
+            return
 
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
         self.id = generate_id(self)
-        self.assignments = dict() # {id : Assignment}
         self.weight = weight
         self.name = name
+        self.corr = corr
         self.num_drops = num_drops
+        self.assignments = dict() # {id : Assignment}
 
 
     def __repr__(self) -> str:
@@ -297,6 +317,7 @@ class AssignmentGroup:
             "id" : self.id,
             "name" : self.name,
             "weight" : self.weight,
+            "corr" : self.corr,
             "num_drops" : self.num_drops,
             "assignments" : assignments,
             "class" : "AssignmentGroup"
@@ -310,13 +331,14 @@ class AssignmentGroup:
         self.id = json["id"]
         self.name = json["name"]
         self.weight = json["weight"]
+        self.corr = json["corr"]
         self.num_drops = json["num_drops"]
         self.assignments = {}
 
         for id, sub_json in json["assignments"].items():
             # Only Assignment objects belong to AssignmentGroup
             assert sub_json["class"] == "Assignment"
-            self.assignments[id] = Assignment(0)._from_json(sub_json)
+            self.assignments[id] = Assignment(0, override_json=sub_json)
 
 
     def add_assignment(self) -> None:
@@ -380,13 +402,12 @@ class CurvedAssignmentGroup(AssignmentGroup):
     def __init__(
         self, 
         weight: float, 
-        corr: float = 0.6, 
         name: str = None, 
-        num_drops: int = 0
+        corr: float = 0.6, 
+        num_drops: int = 0, 
+        override_json: dict = None
     ) -> None:
-
-        super().__init__(weight, name, num_drops)
-        self.corr = corr
+        super().__init__(weight, name, corr, num_drops, override_json)
 
 
     def _to_json(self) -> dict:
@@ -449,10 +470,11 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         self, 
         weight: float, 
         name: str = None, 
-        num_drops: int = 0
+        corr: float = None, 
+        num_drops: int = 0, 
+        override_json: dict = None
     ) -> None:
-                 
-        super().__init__(weight, name, num_drops) 
+        super().__init__(weight, name, corr, num_drops, override_json)
 
 
     def _to_json(self) -> dict:
@@ -513,7 +535,16 @@ class Course:
         UncurvedSingleAssignment
     ]
 
-    def __init__(self, corr: float = 0.6, name: str = None) -> None:
+    def __init__(
+        self, 
+        corr: float = 0.6, 
+        name: str = None,
+        override_json: dict = None
+    ) -> None:
+        # Overriding all step with data from dictionary
+        if override_json is not None:
+            self._from_json(override_json)
+            return
 
         if corr < 0 or corr > 1.0: raise ValueError(f"Invalid correlation coefficient: {corr}.")
 
@@ -603,8 +634,7 @@ class Course:
             obj_class = info["object"]["class"]
             assert obj_class in allowed_classes
             # Use dummy class attributes to create instances
-            obj = allowed_classes[obj_class](0.5, 5)
-            obj._from_json(info["object"])
+            obj = allowed_classes[obj_class](0.5, 5, override_json=info["object"])
             info["object"] = obj
 
         self.components = json["components"]
@@ -786,12 +816,16 @@ class Course:
         return new_component
 
 
-    def add_curved_group(self, weight: float, corr: float = None, 
-                         name: str = None, num_drops: int = 0) -> CurvedAssignmentGroup:
-        
+    def add_curved_group(
+        self, 
+        weight: float, 
+        name: str = None,
+        corr: float = None, 
+        num_drops: int = 0
+    ) -> CurvedAssignmentGroup:
         if corr == None: corr = self.corr
         if name == None: name = "Grouped Assignments " + str(len(self.components) + 1)
-        new_component = CurvedAssignmentGroup(weight, corr, name, num_drops)
+        new_component = CurvedAssignmentGroup(weight, name, corr, num_drops)
         id = new_component.get_id()
 
         info = {
@@ -805,11 +839,15 @@ class Course:
         return new_component
 
 
-    def add_uncurved_group(self, weight: float, name: str = None, 
-                           num_drops: int = 0) -> UncurvedAssignmentGroup:
-        
+    def add_uncurved_group(
+        self, 
+        weight: float, 
+        name: str = None, 
+        corr: float = None,
+        num_drops: int = 0
+    ) -> UncurvedAssignmentGroup:    
         if name == None: name = "Grouped Assignments " + str(len(self.components) + 1)
-        new_component = UncurvedAssignmentGroup(weight, name, num_drops)
+        new_component = UncurvedAssignmentGroup(weight, name, corr, num_drops)
         id = new_component.get_id()
 
         info = {
@@ -900,8 +938,10 @@ class Profile():
     """
 
     
-    def __init__(self) -> None:
+    def __init__(self, override_json: dict = None) -> None:
         self.courses = {}
+        if override_json is not None:
+            self._from_json(override_json)
             
 
     def __repr__(self) -> str:
@@ -916,6 +956,18 @@ class Profile():
         del self.courses[key]
 
     
+    def _to_json(self) -> dict:
+        output = deepcopy(self.courses)
+        for id, course in output.items():
+            output[id] = course._to_json()
+        return output
+    
+    def _from_json(self, json: dict) -> None:
+        self.courses = {}
+        for id, course_json in json.items():
+            self.courses[id] = Course(override_json=course_json)
+
+
     def get_courses(self) -> dict[int, Course]:
         return self.courses
 
@@ -926,14 +978,3 @@ class Profile():
         new_course = Course(corr, name)
         self.courses[new_course.get_id()] = new_course
         return new_course
-
-    
-    def load(self, path: str) -> None:
-        with open(path, "rb") as f:
-            profile = pickle.load(f)
-        self.courses = profile.get_courses()
-
-
-    def dump(self, path: str) -> None:
-        with open(path, "wb") as f:
-            pickle.dump(self, f)
