@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from copy import deepcopy
 from math import isclose
 import pickle
 from scipy.stats import truncnorm
@@ -218,6 +219,12 @@ class CurvedSingleAssignment(Assignment):
         self.weight = weight
 
 
+    def _to_json(self) -> dict:
+        output = super()._to_json()
+        output["class"] = "CurvedSingleAssignment"
+        return output
+
+
 class UncurvedSingleAssignment(Assignment):
     """
     A single uncurved assignment that counts toward the final
@@ -251,6 +258,12 @@ class UncurvedSingleAssignment(Assignment):
         self.weight = weight
 
 
+    def _to_json(self) -> dict:
+        output = super()._to_json()
+        output["class"] = "UncurvedSingleAssignment"
+        return output
+
+
 class AssignmentGroup:
     
     def __init__(
@@ -263,7 +276,7 @@ class AssignmentGroup:
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
         self.id = generate_id(self)
-        self.assignments = dict()
+        self.assignments = dict() # {id : Assignment}
         self.weight = weight
         self.name = name
         self.num_drops = num_drops
@@ -273,6 +286,37 @@ class AssignmentGroup:
         repr = f"Assignment Group {self.id}"
         if self.name: repr += f" ({self.name})"
         return f"<{repr}>"
+
+    
+    def _to_json(self) -> dict:
+        """Convert all data to dictionary"""
+        assignments = {
+            id: obj._to_json() for id, obj in self.get_assignments().items()
+        }
+        output = {
+            "id" : self.id,
+            "name" : self.name,
+            "weight" : self.weight,
+            "num_drops" : self.num_drops,
+            "assignments" : assignments,
+            "class" : "AssignmentGroup"
+        }
+        
+        return output
+
+    
+    def _from_json(self, json: dict) -> None:
+        """Load and override all data from dictionary"""
+        self.id = json["id"]
+        self.name = json["name"]
+        self.weight = json["weight"]
+        self.num_drops = json["num_drops"]
+        self.assignments = {}
+
+        for id, sub_json in json["assignments"].items():
+            # Only Assignment objects belong to AssignmentGroup
+            assert sub_json["class"] == "Assignment"
+            self.assignments[id] = Assignment(0)._from_json(sub_json)
 
 
     def add_assignment(self) -> None:
@@ -345,6 +389,12 @@ class CurvedAssignmentGroup(AssignmentGroup):
         self.corr = corr
 
 
+    def _to_json(self) -> dict:
+        output = super()._to_json()
+        output["class"] = "CurvedAssignmentGroup"
+        return output
+
+
     def add_assignment(self, score: float, name: str=None,
                        upper: float=100, mu: float=None, sigma: float=None) -> None:
 
@@ -403,6 +453,12 @@ class UncurvedAssignmentGroup(AssignmentGroup):
     ) -> None:
                  
         super().__init__(weight, name, num_drops) 
+
+
+    def _to_json(self) -> dict:
+        output = super()._to_json()
+        output["class"] = "UncurvedAssignmentGroup"
+        return output
 
 
     def add_assignment(self, score: float, name: str = None,
@@ -464,7 +520,7 @@ class Course:
         self.id = generate_id(self)
         self.corr = corr
         self.name = name if name else "My Course"
-        self.components = dict()
+        self.components = dict() # {id, Component}
         self.clobber_info = None
 
         self.uncurved_boundaries = {
@@ -506,6 +562,54 @@ class Course:
         return f"<{repr}>"
 
 
+    def _to_json(self) -> dict:
+        """Convert all data to dictionary"""
+        components = deepcopy(self.components)
+        for info in components.values():
+            info["object"] = info["object"]._to_json()
+
+        output = {
+            "id" : self.id,
+            "name" : self.name,
+            "corr" : self.corr,
+            "clobber_info" : self.clobber_info,
+            "uncurved_boundaries" : self.uncurved_boundaries,
+            "curved_boundaries": self.curved_boundaries,
+            "components" : components,
+            "class" : "Course"
+        }
+
+        return output
+
+
+    def _from_json(self, json: dict) -> None:
+        """Load and override all data from dictionary"""
+        self.id = json["id"]
+        self.name = json["name"]
+        self.corr = json["corr"]
+        self.clobber_info = json["clobber_info"]
+        self.uncurved_boundaries = json["uncurved_boundaries"]
+        self.curved_boundaries = json["curved_boundaries"]
+
+        # A dict of allowed class and convenient instantiation
+        allowed_classes = {
+            "CurvedAssignmentGroup": CurvedAssignmentGroup,
+            "UncurvedAssignmentGroup": UncurvedAssignmentGroup,
+            "CurvedSingleAssignment": CurvedSingleAssignment,
+            "UncurvedSingleAssignment": UncurvedSingleAssignment
+        }
+
+        for info in json["components"].values():
+            obj_class = info["object"]["class"]
+            assert obj_class in allowed_classes
+            # Use dummy class attributes to create instances
+            obj = allowed_classes[obj_class](0.5, 5)
+            obj._from_json(info["object"])
+            info["object"] = obj
+
+        self.components = json["components"]
+            
+ 
     def get_id(self) -> int:
         """Return id"""
         return self.id
@@ -528,7 +632,7 @@ class Course:
             "mu": 0,
             "sigma": 0,
             "zscore": 0
-            }
+        }
 
         if len(assignments) == 0: return detail
         for component in assignments:
