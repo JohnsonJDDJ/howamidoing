@@ -1,3 +1,5 @@
+import pickle
+
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for
 )
@@ -5,6 +7,7 @@ from werkzeug.exceptions import abort
 
 from howamidoing.auth import login_required
 from howamidoing.db import get_db
+from howamidoing.objects import *
 
 bp = Blueprint('blog', __name__) # No url_prefix
 
@@ -12,12 +15,12 @@ bp = Blueprint('blog', __name__) # No url_prefix
 @bp.route('/')
 def index():
     db = get_db()
-    posts = db.execute(
-        'SELECT p.id, title, body, created, author_id, username'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' ORDER BY created DESC'
+    users = db.execute(
+        'SELECT id, username, pickled_profile'
+        ' FROM user'
+        ' ORDER BY username DESC'
     ).fetchall()
-    return render_template('blog/index.html', posts=posts)
+    return render_template('blog/index.html', users=users)
 
 
 @bp.route('/create', methods=('GET', 'POST'))
@@ -34,11 +37,13 @@ def create():
         if error is not None:
             flash(error)
         else:
+            profile = pickle.loads(g.user['pickled_profile'])
+            profile.add_course(name=title)
             db = get_db()
             db.execute(
-                'INSERT INTO post (title, body, author_id)'
-                ' VALUES (?, ?, ?)',
-                (title, body, g.user['id'])
+                'UPDATE user SET pickled_profile = ?'
+                ' WHERE id = ?',
+                (g.user['id'], pickle.dumps(profile))
             )
             db.commit()
             return redirect(url_for('blog.index'))

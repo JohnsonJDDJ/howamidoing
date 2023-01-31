@@ -7,12 +7,14 @@
 # new users and to log in and log out
 
 import functools
+import pickle
 
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from howamidoing.objects import *
 from howamidoing.db import get_db
 
 # Create a Blueprint named 'auth'
@@ -39,15 +41,20 @@ def register():
         elif not password:
             error = 'Password is required.'
 
-        # Validation succeed. Insert to database
+        # Input validation succeed. Initialize a new
+        # profile and insert into the database. Catch
+        # Integrity error for duplicate username.
         if error is None:
             try:
                 db.execute(
-                    "INSERT INTO user (username, password) VALUES (?, ?)",
-                    (username, generate_password_hash(password)),
+                    "INSERT INTO user (username, password, pickled_profile) VALUES (?, ?, ?)",
+                    (
+                        username, 
+                        generate_password_hash(password),
+                        pickle.dumps(Profile())
+                    )
                 )
                 db.commit()
-            # User already exist
             except db.IntegrityError:
                 error = f"User {username} is already registered."
             else:
