@@ -3,4 +3,5 @@ dependencies :
  - python = 3.11
  - scipy = 1.10
  - flask = 2.2
+ - pymongo = 4.3
  - ipykernel
