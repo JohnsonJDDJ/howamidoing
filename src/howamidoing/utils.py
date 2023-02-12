@@ -11,8 +11,8 @@ def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
     return (first_term + second_term) ** 0.5
 
 
-def generate_id(object) -> int:
+def generate_id(object) -> str:
     """Generate an uniqe id for an object"""
     # Code motivated by chatGPT, 2022
     # chat.openai.com
-    return int(time() * 1000000 + id(object))
+    return str(int(time() * 1000000 + id(object)))

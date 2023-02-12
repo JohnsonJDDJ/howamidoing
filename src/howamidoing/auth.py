@@ -1,13 +1,14 @@
 import functools
 import re
 
+from bson.objectid import ObjectId
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, session, url_for
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .db import get_db
-from.objects import Profile
+from howamidoing.db import get_db
+from howamidoing.objects import Profile
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -113,13 +114,16 @@ def login():
 
 @bp.before_app_request
 def load_logged_in_user():
-    user_id = session.get("user_id")
+    user_id =  ObjectId(session.get("user_id"))
     users = get_db().users
 
     if user_id is None:
         g.user = None
     else:
         g.user = users.find_one({"_id": user_id})
+        if g.user:
+            g.profile = Profile(g.user["profile"])
+            print(g.profile)
 
 
 @bp.route('/logout')
