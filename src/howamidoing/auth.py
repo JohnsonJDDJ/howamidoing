@@ -68,7 +68,7 @@ def register():
         password = request.form['password']
         users = get_db().users
 
-        is_username_valid, username_error_message = validate_username(username)
+        is_username_valid, username_error_message = validate_username(username, users)
         is_password_valid, password_error_message = validate_password(password)
 
         if not is_username_valid:

@@ -8,9 +8,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from .db import get_db
 
 
-bp = Blueprint('auth', __name__)
+bp = Blueprint('demo', __name__)
 
-@bp.route('/create', methods=('GET', 'POST'))
+@bp.route('/demo', methods=('GET', 'POST'))
 def create():
     db = get_db()
     db.users.insert_one({"name" : "demo"})
