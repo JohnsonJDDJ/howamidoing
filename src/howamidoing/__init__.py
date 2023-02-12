@@ -14,9 +14,11 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
     app.config["MONGO_URI"] = "mongodb://localhost:27017/howamidoing"
-    mongo = PyMongo(app)
 
     from . import demo
     app.register_blueprint(demo.bp)
+
+    from . import auth
+    app.register_blueprint(auth.bp)
 
     return app
