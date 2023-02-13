@@ -112,7 +112,7 @@ class Assignment:
         self.before_clobber = json["before_clobber"]
 
 
-    def get_id(self) -> int:
+    def get_id(self) -> str:
         """Return id"""
         return self.id
 
@@ -345,11 +345,11 @@ class AssignmentGroup:
         return NotImplementedError
 
 
-    def get_id(self) -> int:
+    def get_id(self) -> str:
         return self.id
 
     
-    def get_assignments(self) -> dict[int, Assignment]:
+    def get_assignments(self) -> dict[str, Assignment]:
         return self.assignments
 
     
@@ -535,6 +535,12 @@ class Course:
         UncurvedSingleAssignment
     ]
 
+    _allowed_status = {
+        "In Progress", 
+        "Completed",
+        "Other"
+    }
+
     def __init__(
         self, 
         corr: float = 0.6, 
@@ -551,6 +557,7 @@ class Course:
         self.id = generate_id(self)
         self.corr = corr
         self.name = name if name else "My Course"
+        self.status = "Other"
         self.components = dict() # {id, Component}
         self.clobber_info = None
 
@@ -603,6 +610,7 @@ class Course:
             "id" : self.id,
             "name" : self.name,
             "corr" : self.corr,
+            "status" : self.status,
             "clobber_info" : self.clobber_info,
             "uncurved_boundaries" : self.uncurved_boundaries,
             "curved_boundaries": self.curved_boundaries,
@@ -618,6 +626,7 @@ class Course:
         self.id = json["id"]
         self.name = json["name"]
         self.corr = json["corr"]
+        self.status = json["status"]
         self.clobber_info = json["clobber_info"]
         self.uncurved_boundaries = json["uncurved_boundaries"]
         self.curved_boundaries = json["curved_boundaries"]
@@ -640,13 +649,29 @@ class Course:
         self.components = json["components"]
             
  
-    def get_id(self) -> int:
+    def get_id(self) -> str:
         """Return id"""
         return self.id
 
+    
+    def get_name(self) -> str:
+        """Return name"""
+        return self.name
 
-    def get_components(self) -> dict[int, dict]:
+
+    def get_components(self) -> dict[str, dict]:
         return self.components
+
+
+    def get_status(self) -> str:
+        return self.status
+
+
+    def set_status(self, status: str) -> None:
+        if status in self._allowed_status:
+            self.status = status
+        else:
+            raise ValueError("Invalid status.")
 
 
     def _calculate_curved_detail(
@@ -661,10 +686,15 @@ class Course:
             "score": 0,
             "mu": 0,
             "sigma": 0,
-            "zscore": 0
+            "zscore": 0,
+            "curved": False
         }
 
-        if len(assignments) == 0: return detail
+        if len(assignments) == 0: 
+            return curved
+        else:
+            curved["curved"] = True
+
         for component in assignments:
             detail = component.get_detail()
             curved["score"] += detail["score"] * component.get_weight()
@@ -715,11 +745,14 @@ class Course:
         
         detail = dict()
         detail["score"] = final_score
-        detail["stats"] = {
-            "zscore" : curved_info["zscore"],
-            "mu" : final_mu,
-            "sigma" : final_sigma
-        }
+        if curved_info["curved"]:
+            detail["stats"] = {
+                "zscore" : curved_info["zscore"],
+                "mu" : final_mu,
+                "sigma" : final_sigma
+            }  
+        else:
+            detail["stats"] = dict() 
 
         return detail
 
@@ -731,6 +764,8 @@ class Course:
         # Iterate over components:
         # Classify into curved and uncurved.
         # Compute the total weight.
+        if len(self.components) == 0:
+            raise AssertionError("No assignments in this course.")
         total, curved, uncurved = 0, [], []
         for component in self.components.values():
             if component["curved"]: 
@@ -743,7 +778,7 @@ class Course:
         is_final = isclose(total, 1.0)
 
         detail = self._calculate_detail(curved, uncurved, total)        
-        detail["curved"] = bool(len(curved))
+        detail["curved"] = bool(len(detail["stats"]))
         detail["is_final"] = is_final
 
         return detail
@@ -862,8 +897,8 @@ class Course:
 
     
     def apply_clobber(
-        self, source: int, 
-        targets: list[int], 
+        self, source: str, 
+        targets: list[str], 
         capacity: int = -1
     ) -> None:
         # Check for errors:
@@ -948,11 +983,11 @@ class Profile():
         return self.courses.__repr__()
 
     
-    def __getitem__(self, key: int) -> Course:
+    def __getitem__(self, key: str) -> Course:
         return self.courses[key]
 
 
-    def __delitem__(self, key: int) -> None:
+    def __delitem__(self, key: str) -> None:
         del self.courses[key]
 
     
@@ -968,9 +1003,29 @@ class Profile():
             self.courses[id] = Course(override_json=course_json)
 
 
-    def get_courses(self) -> dict[int, Course]:
+    def get_courses(self) -> dict[str, Course]:
         return self.courses
 
+    
+    def get_summary(self) -> dict:
+        if len(self.courses) == 0:
+            raise AssertionError("No courses yet!")
+
+        summary = []
+        for id, course in self.courses.items():
+            course_detail = {"id" : id}
+            course_detail["name"] = course.get_name()
+            course_detail["status"] = course.get_status()
+            try:
+                course_detail["detail"] = course.get_detail()
+            except Exception as e:
+                course_detail["detail"] = str(e)
+            summary.append(course_detail)
+
+        status_ordering = {"In Progress": 0, "Other": 1, "Completed": 2}
+        summary.sort(key = lambda course_detail: status_ordering[course_detail["status"]])
+
+        return summary
     
     def add_course(self, corr: float = 0.6, name: str = None) -> Course:
         """Create a new course"""
