@@ -144,26 +144,26 @@ class Assignment:
         return self.weight
 
         
-    def get_detail(self) -> dict:
+    def get_summary(self) -> dict:
         """
-        Return a dictionary of full details about this
+        Return a dictionary of full summaries about this
         assignment. Includes score and potentially the
         mean, standard deviation, and zscore of this 
         assignment if curved.
         """
-        detail = dict()
-        detail["score"] = self.score
+        summary = dict()
+        summary["score"] = self.score
         # For uncurved assignment, do not pass in
         # any other stats except the score.
         if not self.curved:
-            detail["stats"] = dict()
+            summary["stats"] = dict()
         else:
-            detail["stats"] = {
+            summary["stats"] = {
                 "zscore" : self.zscore,
                 "mu" : self.mu,
                 "sigma" : self.sigma
             }
-        return detail
+        return summary
 
     
     def apply_clobber(self, zscore: float) -> None:
@@ -383,20 +383,20 @@ class AssignmentGroup:
         return assignments, drop_applied
     
 
-    def _calculate_details(self, assignments: Iterable[Assignment]) -> dict:
-        """Calculate the summary detail of assignments"""
+    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> dict:
+        """Calculate the detail summary of assignments"""
         return NotImplementedError
 
 
-    def get_detail(self) -> dict:
+    def get_summary(self) -> dict:
 
         if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
 
         assignments, drop_applied = self._apply_drop()
-        detail = self._calculate_details(assignments)
-        detail["drop_applied"] = drop_applied
+        summary = self._calculate_summaries(assignments)
+        summary["drop_applied"] = drop_applied
 
-        return detail
+        return summary
 
 
 class CurvedAssignmentGroup(AssignmentGroup):
@@ -435,7 +435,7 @@ class CurvedAssignmentGroup(AssignmentGroup):
         self.assignments[id] = new_assignment
 
 
-    def _calculate_details(self, assignments: Iterable[Assignment]) -> dict:
+    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> dict:
         """
         Calculate averaged score, mu and sigma. Then
         calculate zscore.
@@ -444,26 +444,26 @@ class CurvedAssignmentGroup(AssignmentGroup):
         n = len(assignments)
 
         for assignment in assignments:
-            detail = assignment.get_detail()
-            final_mu += detail["stats"]["mu"] / n
-            final_score += detail["score"] / n
+            summary = assignment.get_summary()
+            final_mu += summary["stats"]["mu"] / n
+            final_score += summary["score"] / n
             final_sigma = correlated_sigma_sum(
                 final_sigma,
-                detail["stats"]["sigma"] / n,
+                summary["stats"]["sigma"] / n,
                 self.corr
             )
 
         final_zscore = (final_score - final_mu) / final_sigma
 
-        detail = dict()
-        detail["score"] = final_score
-        detail["stats"] = {
+        summary = dict()
+        summary["score"] = final_score
+        summary["stats"] = {
             "zscore" : final_zscore,
             "mu" : final_mu,
             "sigma" : final_sigma
         }
 
-        return detail
+        return summary
 
 
 class UncurvedAssignmentGroup(AssignmentGroup):
@@ -500,7 +500,7 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         self.assignments[id] = new_assignment
         
 
-    def _calculate_details(self, assignments: Iterable[Assignment]) -> dict:
+    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> dict:
         """Calculate averaged score"""
         final_score = 0
         n = len(assignments)
@@ -510,11 +510,11 @@ class UncurvedAssignmentGroup(AssignmentGroup):
 
         final_score = final_score / n
 
-        detail = dict()
-        detail["score"] = final_score
-        detail["stats"] = dict()
+        summary = dict()
+        summary["score"] = final_score
+        summary["stats"] = dict()
 
-        return detail
+        return summary
 
 
 class Course:
@@ -681,7 +681,7 @@ class Course:
             raise ValueError("Invalid status.")
 
 
-    def _calculate_curved_detail(
+    def _calculate_curved_summary(
         self, 
         assignments: Iterable[Component]
     ) -> dict[str, float]:
@@ -703,12 +703,12 @@ class Course:
             curved["curved"] = True
 
         for component in assignments:
-            detail = component.get_detail()
-            curved["score"] += detail["score"] * component.get_weight()
-            curved["mu"] += detail["stats"]["mu"] * component.get_weight()
+            summary = component.get_summary()
+            curved["score"] += summary["score"] * component.get_weight()
+            curved["mu"] += summary["stats"]["mu"] * component.get_weight()
             curved["sigma"] = correlated_sigma_sum(
                 curved["sigma"],
-                detail["stats"]["sigma"] * component.get_weight(),
+                summary["stats"]["sigma"] * component.get_weight(),
                 self.corr
             )
         curved["zscore"] = (curved["score"] - curved["mu"]) / curved["sigma"]
@@ -716,19 +716,19 @@ class Course:
         return curved
 
 
-    def _calculate_uncurved_detail(
+    def _calculate_uncurved_summary(
         self,
         assignments: Iterable[Component]
     ) -> float:
         """Calculate weighted score for uncurved components"""
         uncurved_score = 0
         for component in assignments:
-            detail = component.get_detail()
-            uncurved_score += detail["score"] * component.get_weight()
+            summary = component.get_summary()
+            uncurved_score += summary["score"] * component.get_weight()
         return uncurved_score
 
 
-    def _calculate_detail(
+    def _calculate_summary(
         self,
         curved: Iterable[Component],
         uncurved: Iterable[Component],
@@ -739,8 +739,8 @@ class Course:
         all assignments
         """
         # Combine everthing
-        curved_info = self._calculate_curved_detail(curved)
-        uncurved_score = self._calculate_uncurved_detail(uncurved)
+        curved_info = self._calculate_curved_summary(curved)
+        uncurved_score = self._calculate_uncurved_summary(uncurved)
 
         overall_score = curved_info["score"] + uncurved_score
         final_score = overall_score / total
@@ -750,21 +750,21 @@ class Course:
 
         final_sigma = curved_info["sigma"] / total
         
-        detail = dict()
-        detail["score"] = final_score
+        summary = dict()
+        summary["score"] = final_score
         if curved_info["curved"]:
-            detail["stats"] = {
+            summary["stats"] = {
                 "zscore" : curved_info["zscore"],
                 "mu" : final_mu,
                 "sigma" : final_sigma
             }  
         else:
-            detail["stats"] = dict() 
+            summary["stats"] = dict() 
 
-        return detail
+        return summary
 
 
-    def get_detail(self) -> dict:
+    def get_summary(self) -> dict:
         """
         Overall statistics of the course
         """
@@ -784,22 +784,22 @@ class Course:
         # Check if the weights are incomplete
         is_final = isclose(total, 1.0)
 
-        detail = self._calculate_detail(curved, uncurved, total)        
-        detail["curved"] = bool(len(detail["stats"]))
-        detail["is_final"] = is_final
+        summary = self._calculate_summary(curved, uncurved, total)        
+        summary["curved"] = bool(len(summary["stats"]))
+        summary["is_final"] = is_final
 
-        return detail
+        return summary
 
 
     def get_grade(self, show_boundary=False) -> str:
         """Calclate the letter grade for ths course"""
         # Calculate letter grade using scipy.stat.truncnorm
-        detail = self.get_detail()
+        summary = self.get_summary()
 
-        if detail["curved"]:
-            a = (0 - detail["stats"]["mu"]) / detail["stats"]["sigma"]
-            b = (1 - detail["stats"]["mu"]) / detail["stats"]["sigma"]
-            X = truncnorm(a, b, loc=detail["stats"]["mu"], scale=detail["stats"]["sigma"])
+        if summary["curved"]:
+            a = (0 - summary["stats"]["mu"]) / summary["stats"]["sigma"]
+            b = (1 - summary["stats"]["mu"]) / summary["stats"]["sigma"]
+            X = truncnorm(a, b, loc=summary["stats"]["mu"], scale=summary["stats"]["sigma"])
             true_boundaries = {
                 k: X.ppf(v) for k,v in self.curved_boundaries.items()
             }
@@ -812,33 +812,33 @@ class Course:
 
         for k, v in true_boundaries.items():
             letter_grade = k
-            if detail["score"] >= v:
+            if summary["score"] >= v:
                 break
         
         return letter_grade
 
 
-    def get_summary(self) -> dict:
+    def get_detail(self) -> dict:
         if len(self.components) == 0:
             raise AssertionError("No components yet!")
 
-        summary = []
+        detail = []
         for id, component_info in self.components.items():
-            component_detail = {"id" : id}
-            component_detail.update(component_info) # Merge two dictionary
-            component = component_detail["object"] 
-            component_detail["name"] = component.get_name()
-            del component_detail["object"] # Remove object
+            component_summary = {"id" : id}
+            component_summary.update(component_info) # Merge two dictionary
+            component = component_summary["object"] 
+            component_summary["name"] = component.get_name()
+            del component_summary["object"] # Remove object
             try:
-                component_detail["detail"] = component.get_detail()
+                component_summary["summary"] = component.get_summary()
             except Exception as e:
-                component_detail["detail"] = str(e)
-            summary.append(component_detail)
+                component_summary["summary"] = str(e)
+            detail.append(component_summary)
 
         # Sort by weight
-        summary.sort(key = lambda component_detail: component_detail["weight"], reverse=True)
+        detail.sort(key = lambda component_summary: component_summary["weight"], reverse=True)
 
-        return summary
+        return detail
 
 
     def add_curved_single(self, weight: float, score: float, name: str = None,
@@ -1037,26 +1037,26 @@ class Profile():
         return self.courses
 
     
-    def get_summary(self) -> dict:
+    def get_detail(self) -> dict:
         if len(self.courses) == 0:
             raise AssertionError("No courses yet!")
 
-        summary = []
+        detail = []
         for id, course in self.courses.items():
-            course_detail = {"id" : id}
-            course_detail["name"] = course.get_name()
-            course_detail["status"] = course.get_status()
+            course_summary = {"id" : id}
+            course_summary["name"] = course.get_name()
+            course_summary["status"] = course.get_status()
             try:
-                course_detail["detail"] = course.get_detail()
+                course_summary["summary"] = course.get_summary()
             except Exception as e:
-                course_detail["detail"] = str(e)
-            summary.append(course_detail)
+                course_summary["summary"] = str(e)
+            detail.append(course_summary)
 
         # Sort by status
         status_ordering = {"In Progress": 0, "Other": 1, "Completed": 2}
-        summary.sort(key = lambda course_detail: status_ordering[course_detail["status"]])
+        detail.sort(key = lambda course_summary: status_ordering[course_summary["status"]])
 
-        return summary
+        return detail
     
 
     def add_course(self, corr: float = 0.6, name: str = None) -> Course:
