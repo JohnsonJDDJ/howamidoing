@@ -116,6 +116,10 @@ class Assignment:
         """Return id"""
         return self.id
 
+    
+    def get_name(self) -> str:
+        return self.name
+
 
     def get_score(self) -> float:
         """Return score"""
@@ -348,6 +352,9 @@ class AssignmentGroup:
     def get_id(self) -> str:
         return self.id
 
+
+    def get_name(self) -> str:
+        return self.name
     
     def get_assignments(self) -> dict[str, Assignment]:
         return self.assignments
@@ -811,6 +818,29 @@ class Course:
         return letter_grade
 
 
+    def get_summary(self) -> dict:
+        if len(self.components) == 0:
+            raise AssertionError("No components yet!")
+
+        summary = []
+        for id, component_info in self.components.items():
+            component_detail = {"id" : id}
+            component_detail.update(component_info) # Merge two dictionary
+            component = component_detail["object"] 
+            component_detail["name"] = component.get_name()
+            del component_detail["object"] # Remove object
+            try:
+                component_detail["detail"] = component.get_detail()
+            except Exception as e:
+                component_detail["detail"] = str(e)
+            summary.append(component_detail)
+
+        # Sort by weight
+        summary.sort(key = lambda component_detail: component_detail["weight"], reverse=True)
+
+        return summary
+
+
     def add_curved_single(self, weight: float, score: float, name: str = None,
                           upper: float = 100, mu: float = None, sigma: float = None
                           ) -> CurvedSingleAssignment:
@@ -1022,11 +1052,13 @@ class Profile():
                 course_detail["detail"] = str(e)
             summary.append(course_detail)
 
+        # Sort by status
         status_ordering = {"In Progress": 0, "Other": 1, "Completed": 2}
         summary.sort(key = lambda course_detail: status_ordering[course_detail["status"]])
 
         return summary
     
+
     def add_course(self, corr: float = 0.6, name: str = None) -> Course:
         """Create a new course"""
         if name is None: name = "Course " + str(len(self.courses) + 1)
