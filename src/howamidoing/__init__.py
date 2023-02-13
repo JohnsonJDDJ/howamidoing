@@ -10,9 +10,6 @@ def create_app(test_config=None):
     app.config["MONGO_URI"] = "mongodb://localhost:27017/howamidoing"
     app.secret_key = "secret_key_value_goes_here"
 
-    from . import demo
-    app.register_blueprint(demo.bp)
-
     from . import auth
     app.register_blueprint(auth.bp)
 
