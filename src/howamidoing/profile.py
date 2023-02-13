@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, session
 )
 from werkzeug.exceptions import abort
 
@@ -10,7 +10,10 @@ bp = Blueprint('profile', __name__)
 
 @bp.route('/')
 def index():
-    return render_template('index.html')
+    if session.get("user_id") is not None:
+        course_details = g.profile.get_detail()
+        return render_template('index.html', course_details = course_details)
+    return render_template('index.html', course_details = [])
 
 
 @bp.route('/create', methods=('GET', 'POST'))
