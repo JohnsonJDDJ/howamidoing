@@ -13,18 +13,22 @@
 {% endblock %}
 
 {% block content %}
-  {% for course in course_details %}
-    <article class="post">
-      <header>
-        <div>
-          <h1>{{ course['name'] }}</h1>
-          <div class="about">Status: {{ course['status'] }}</div>
-        </div>
-      </header>
-      <p class="body">{{ course['summary'] }}</p>
-    </article>
-    {% if not loop.last %}
-      <hr>
-    {% endif %}
-  {% endfor %}
+  {% if g.user and course_details%}
+    {% for course in course_details %}
+      <article class="post">
+        <header>
+          <div>
+            <h1>{{ course['name'] }}</h1>
+            <div class="about">Status: {{ course['status'] }}</div>
+          </div>
+        </header>
+        <p class="body">{{ course['summary'] }}</p>
+      </article>
+      {% if not loop.last %}
+        <hr>
+      {% endif %}
+    {% endfor %} 
+  {% elif g.user%}
+    No courses yet! Create a course now!
+  {% endif %}
 {% endblock %}
