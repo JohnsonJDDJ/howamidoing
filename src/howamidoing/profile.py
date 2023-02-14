@@ -16,12 +16,13 @@ def index():
     return render_template('index.html', course_details = [])
 
 
-@bp.route('/create', methods=('GET', 'POST'))
+@bp.route('/add_course', methods=('GET', 'POST'))
 @login_required
-def create():
+def add_course():
     if request.method == 'POST':
         name = request.form['name']
         corr = float(request.form['corr'])
+        status = request.form['status']
         users = get_db().users
         error = None
 
@@ -31,7 +32,8 @@ def create():
         if error is not None:
             flash(error)
         else:
-            g.profile.add_course(corr=corr, name=name)
+            new_course = g.profile.add_course(corr=corr, name=name)
+            new_course.set_status(status)
             users.update_one(
                 {"_id": g.user["_id"]},
                 {"$set": {"profile": g.profile._to_json()}})

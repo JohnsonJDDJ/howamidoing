@@ -6,10 +6,16 @@
 
 {% block content %}
   <form method="post">
-    <label for="name">Name</label>
+    <label for="name">Course name</label>
     <input name="name" id="name" value="{{ request.form['name'] }}" required>
+    <label for="status">Course status</label>
+    <choice>
+      <li><input type="radio" id="status" name="status" value="In Progress" checked>In Progress</li>
+      <li><input type="radio" id="status" name="status" value="Completed">Completed</li>
+      <li><input type="radio" id="status" name="status" value="Other">Other</li>
+    </choice>
     <label for="corr">Correlation coefficient</label>
-    <input name="corr" id="corr">{{ request.form['corr'] }}</input>
+    <input name="corr" id="corr" value="0.6">{{ request.form['corr'] }}
     <input type="submit" value="Save">
   </form>
 {% endblock %}

@@ -123,7 +123,6 @@ def load_logged_in_user():
         g.user = users.find_one({"_id": user_id})
         if g.user:
             g.profile = Profile(g.user["profile"])
-            print(g.profile)
 
 
 @bp.route('/logout')

@@ -6,7 +6,7 @@
 {% block header %}
   {% if g.user %}
     <h1>Your Profile</h1>
-    <a class="action" href="{{ url_for('profile.create') }}">Add Course</a>
+    <a class="action" href="{{ url_for('profile.add_course') }}">Add Course</a>
   {% else %}
     <h1>Welcome</h1>
   {% endif %}
@@ -21,7 +21,7 @@
           <div class="about">Status: {{ course['status'] }}</div>
         </div>
       </header>
-      <p class="body">{{ course['id'] }}</p>
+      <p class="body">{{ course['summary'] }}</p>
     </article>
     {% if not loop.last %}
       <hr>
