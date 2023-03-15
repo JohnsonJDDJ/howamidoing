@@ -1004,7 +1004,7 @@ class Profile():
 
     
     def __init__(self, override_json: dict = None) -> None:
-        self.courses = {}
+        self.courses : dict[str, Course] = {}
         if override_json is not None:
             self._from_json(override_json)
             
@@ -1059,9 +1059,24 @@ class Profile():
         return detail
     
 
-    def add_course(self, corr: float = 0.6, name: str = None) -> Course:
+    def add_course(
+            self, 
+            corr: float = 0.6, 
+            name: str = None
+        ) -> Course:
         """Create a new course"""
         if name is None: name = "Course " + str(len(self.courses) + 1)
         new_course = Course(corr, name)
         self.courses[new_course.get_id()] = new_course
         return new_course
+
+
+    def remove_course(
+            self, 
+            course_id : str
+        ) -> None:
+        """
+        Remove a course by its id. Does nothing if course
+        not exist. Returns nothing.
+        """
+        del self.courses[course_id]
