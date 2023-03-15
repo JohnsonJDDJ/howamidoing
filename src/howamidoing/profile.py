@@ -50,7 +50,7 @@ def add_course():
     return render_template('profile/add_course.html')
 
 
-@bp.route('/delete_course/<course_id>', methods=['GET', 'POST'])
+@bp.route('/delete_course/<course_id>', methods=['GET'])
 @login_required
 def delete_course(course_id):
     users = get_db().users

@@ -17,4 +17,7 @@ def create_app(test_config=None):
     app.register_blueprint(profile.bp)
     app.add_url_rule('/', endpoint='index')
 
+    from . import course
+    app.register_blueprint(course.bp)
+
     return app
