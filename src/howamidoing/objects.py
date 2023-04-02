@@ -146,7 +146,7 @@ class Assignment:
         
     def get_summary(self) -> dict:
         """
-        Return a dictionary of full summaries about this
+        Return a dictionary of brief summaries about this
         assignment. Includes score and potentially the
         mean, standard deviation, and zscore of this 
         assignment if curved.
@@ -819,6 +819,9 @@ class Course:
 
 
     def get_detail(self) -> dict:
+        """
+        
+        """
         if len(self.components) == 0:
             raise AssertionError("No components yet!")
 

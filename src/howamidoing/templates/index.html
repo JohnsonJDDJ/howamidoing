@@ -18,7 +18,7 @@
       <article class="post">
         <header>
           <div>
-            <h1>{{ course['name'] }}</h1>
+            <a class="action" href="{{ url_for('course.course_landing', course_id = course['id']) }}">{{ course['name'] }}</a>
             <a class="action" href="{{ url_for('profile.delete_course', course_id = course['id']) }}">Delete Course</a>
             <div class="about">Status: {{ course['status'] }}</div>
           </div>

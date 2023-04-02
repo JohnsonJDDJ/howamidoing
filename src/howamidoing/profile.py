@@ -10,11 +10,17 @@ bp = Blueprint('profile', __name__)
 
 @bp.route('/')
 def index():
-    if session.get("user_id") is not None: # Logged in
+    """
+    Home page
+    Will display differently depends on login status
+    """
+    # Logged in
+    if session.get("user_id") is not None:
         try:
             course_details = g.profile.get_detail()
             return render_template('index.html', course_details = course_details)
-        except Exception as e: # No courses
+        # Logged in but no courses -> course_details = []
+        except Exception as e: 
             return render_template('index.html', course_details = [])
     # Not Logged in
     return render_template('index.html', course_details = [])

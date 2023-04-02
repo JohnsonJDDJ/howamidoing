@@ -6,16 +6,24 @@ from werkzeug.exceptions import abort
 from howamidoing.auth import login_required
 from howamidoing.db import get_db
 
+from .objects import Profile, Course
+
 bp = Blueprint('course', __name__, url_prefix='/course')
 
 @bp.route('/<int:course_id>', methods=['GET', 'POST'])
 @login_required
 def course_landing(course_id):
     # check if this course belongs to the logged in user
-    if course_id not in g.profile.get_courses():
+    course_id = str(course_id)
+    profile : Profile = g.profile
+    if course_id not in profile.get_courses():
         return render_template('error.html', 
             message='You do not have permission to access this course.'
         ), 403
+    
+    # display course information
+    course = profile.get_courses()[course_id]
+    return render_template('course.html', course=course)
 
 
 # @bp.route('/assignments/add')

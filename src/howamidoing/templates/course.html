@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {{ course.get_name() }}
+{% endblock %}
+
+{% block header %}
+    <h1>{{ course.get_name() }}</h1>
+{% endblock %}
