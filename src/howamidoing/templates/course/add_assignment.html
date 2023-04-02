@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Assignment{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <form method="post">
+    <label for="name">Assignment name</label>
+    <input name="name" id="name" value="{{ request.form['name'] }}" required>
+    <label for="weight">Assignment weight</label>
+    <input name="weight" id="weight" value="{{ request.form['weight'] }}" required>
+    <label for="score">Your raw score</label>
+    <input name="score" id="score" value="{{ request.form['score'] }}" required>
+    <label for="upper">Upper bound score for this assignment</label>
+    <input name="upper" id="upper" value="100">{{ request.form['upper'] }}
+    <input type="submit" value="Save">
+  </form>
+{% endblock %}

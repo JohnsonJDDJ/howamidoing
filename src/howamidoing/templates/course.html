@@ -5,18 +5,18 @@
 {% endblock %}
 
 {% block header %}
-  
+  <h1>{{ course.get_name() }}</h1>
+  <a class="action" href="{{ url_for('course.add_assignment', course_id = course.get_id()) }}">Add Assignment</a>
 {% endblock %}
 
 {% block content %}
-  <h1>{{ course.get_name() }}</h1>
   {% if course_details %}
 
     {% for component in course_details %}
       <article class="post">
         <header>
           <div>
-            {component['name']}
+            {{component['name']}}
           </div>
         </header>
         This is not a header
