@@ -18,12 +18,18 @@ def course_landing(course_id):
     profile : Profile = g.profile
     if course_id not in profile.get_courses():
         return render_template('error.html', 
-            message='You do not have permission to access this course.'
+            message = 'You do not have permission to access this course.'
         ), 403
     
-    # display course information
+    # get course by id
     course = profile.get_courses()[course_id]
-    return render_template('course.html', course=course)
+    # display course detail
+    try:
+        course_details = course.get_detail()
+        return render_template('course.html', course = course, course_details = course_details)
+    # no components -> course_details = []
+    except Exception as e: 
+        return render_template('course.html', course = course, course_details = [])
 
 
 # @bp.route('/assignments/add')

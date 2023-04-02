@@ -17,13 +17,13 @@ def index():
     # Logged in
     if session.get("user_id") is not None:
         try:
-            course_details = g.profile.get_detail()
-            return render_template('index.html', course_details = course_details)
-        # Logged in but no courses -> course_details = []
+            profile_details = g.profile.get_detail()
+            return render_template('index.html', profile_details = profile_details)
+        # Logged in but no courses -> profile_details = []
         except Exception as e: 
-            return render_template('index.html', course_details = [])
+            return render_template('index.html', profile_details = [])
     # Not Logged in
-    return render_template('index.html', course_details = [])
+    return render_template('index.html', profile_details = [])
 
 
 @bp.route('/add_course', methods=('GET', 'POST'))

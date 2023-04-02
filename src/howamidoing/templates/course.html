@@ -5,5 +5,30 @@
 {% endblock %}
 
 {% block header %}
-    <h1>{{ course.get_name() }}</h1>
+  
+{% endblock %}
+
+{% block content %}
+  <h1>{{ course.get_name() }}</h1>
+  {% if course_details %}
+
+    {% for component in course_details %}
+      <article class="post">
+        <header>
+          <div>
+            {component['name']}
+          </div>
+        </header>
+        This is not a header
+      </article>
+
+    {% if not loop.last %}
+      <hr>
+    {% endif %}
+
+    {% endfor %} 
+
+  {% else %}
+    No assignments yet. 
+  {% endif %}
 {% endblock %}

@@ -581,7 +581,7 @@ class Course:
             "D+" : 0.67,
             "D" : 0.63,
             "D-" : 0.6,
-            "F" : 0
+            "F" : 0.0
         }
         
         self.curved_boundaries = {
@@ -597,7 +597,7 @@ class Course:
             "D+" : 0.05,
             "D" : 0.04,
             "D-" : 0.03,
-            "F" : 0
+            "F" : 0.0
         }
 
 
@@ -666,7 +666,7 @@ class Course:
         return self.name
 
 
-    def get_components(self) -> dict[str, dict]:
+    def get_components(self) -> dict[str, Component]:
         return self.components
 
 
@@ -818,9 +818,9 @@ class Course:
         return letter_grade
 
 
-    def get_detail(self) -> dict:
+    def get_detail(self) -> list:
         """
-        
+        Course detail is a list of component summaries.
         """
         if len(self.components) == 0:
             raise AssertionError("No components yet!")
@@ -1040,7 +1040,10 @@ class Profile():
         return self.courses
 
     
-    def get_detail(self) -> dict:
+    def get_detail(self) -> list:
+        """
+        Profile detail is a list of course summaries.
+        """
         if len(self.courses) == 0:
             raise AssertionError("No courses yet!")
 
