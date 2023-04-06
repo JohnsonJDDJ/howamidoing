@@ -15,16 +15,15 @@
 {% block content %}
   {% if g.user and profile_details%}
     {% for course in profile_details %}
-      <article class="post">
-        <header>
-          <div>
-            <a class="action" href="{{ url_for('course.course_landing', course_id = course['id']) }}">{{ course['name'] }}</a>
-            <a class="action" href="{{ url_for('profile.delete_course', course_id = course['id']) }}">Delete Course</a>
-            <div class="about">Status: {{ course['status'] }}</div>
-          </div>
-        </header>
-        <p class="body">{{ course['summary'] }}</p>
-      </article>
+      <div class="card">
+        <a class="main" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
+          <h1>{{ course['name'] }}</h1>
+          {{ course['summary'] }}   
+        </a>
+        <a class="delete" href="{{ url_for('profile.delete_course', course_id = course['id']) }}">
+          <i class="fa-solid fa-trash-can fa-2xl" style="color: #282828;"></i> 
+        </a>
+      </div>
       {% if not loop.last %}
         <hr>
       {% endif %}

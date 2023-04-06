@@ -1,8 +1,13 @@
 <!doctype html>
 <title>{% block title %}{% endblock %} - Howamidoing</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,200;0,400;0,600;0,700;1,200;1,400;1,600;1,700&display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/bd839e52d6.js" crossorigin="anonymous"></script>
 <nav>
-  <h1>Howamidoing</h1>
+  <a class="logo" href="{{ url_for('index') }}"><h1>Howamidoing</h1></a>
+  <filler></filler>
   <ul>
     {% if g.user %}
       <li><span>{{ g.user['username'] }}</span>
@@ -17,6 +22,7 @@
   <header>
     {% block header %}{% endblock %}
   </header>
+  <hr>
   {% for message in get_flashed_messages() %}
     <div class="flash">{{ message }}</div>
   {% endfor %}
