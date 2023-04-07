@@ -6,21 +6,21 @@
 
 {% block header %}
   <h1>{{ course.get_name() }}</h1>
-  <a class="action" href="{{ url_for('course.add_assignment', course_id = course.get_id()) }}">Add Assignment</a>
+  <a class="action" href="{{ url_for('course.add_single_assignment', course_id = course.get_id()) }}">Add Single Assignment</a>
 {% endblock %}
 
 {% block content %}
   {% if course_details %}
 
     {% for component in course_details %}
-      <article class="post">
-        <header>
-          <div>
-            {{component['name']}}
-          </div>
-        </header>
-        This is not a header
-      </article>
+      <div class="card">
+        <a class="main" href="">
+          {{ component }}   
+        </a>
+        <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = component['id']) }}">
+          <i class="fa-solid fa-trash-can fa-2xl" style="color: #282828;"></i> 
+        </a>
+      </div>
 
     {% if not loop.last %}
       <hr>

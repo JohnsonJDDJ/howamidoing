@@ -565,7 +565,7 @@ class Course:
         self.corr = corr
         self.name = name if name else "My Course"
         self.status = "Other"
-        self.components = dict() # {id, Component}
+        self.components = dict() # {id, component_info_dict}
         self.clobber_info = None
 
         self.uncurved_boundaries = {
@@ -965,7 +965,7 @@ class Course:
         # Fetch the zscores for clobbering
         z_source = source.get_zscore()
         z_targets = [target.get_zscore() for target in targets]
-        clobbered_assignments = []    
+        clobbered_components = []    
         
         # Apply clobber while we have capacity
         while capacity != 0:
@@ -980,21 +980,29 @@ class Course:
             del z_targets[min_index]
 
             min_assignment.apply_clobber(z_source)
-            clobbered_assignments.append(min_assignment.get_id())
+            clobbered_components.append(min_assignment.get_id())
 
             capacity -= 1
         
         self.clobber_info = {
             "source": source.get_id(),
-            "targets": clobbered_assignments
+            "targets": clobbered_components
         }
 
 
-    def revert_clobber(self) -> None:   
-        for assignment in self.clobber_info["targets"]:
-            assignment = self.components[assignment]["object"]
-            assignment.revert_clobber()
+    def revert_clobber(self) -> None:
+        if self.clobber_info is not None:   
+            for component in self.clobber_info["targets"]:
+                component = self.components[component]["object"]
+                component.revert_clobber()
         self.clobber_info = None
+
+    
+    def remove_component(self, component_id: str) -> None:
+        # Revert clobber before removing components
+        self.revert_clobber()
+        if component_id in self.components:
+            del self.components[component_id]
 
 
 class Profile():

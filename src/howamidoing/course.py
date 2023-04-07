@@ -42,12 +42,13 @@ def course_landing(course_id):
         return render_template('course.html', course = course, course_details = course_details)
     # no components -> course_details = []
     except Exception as e: 
+        print(e)
         return render_template('course.html', course = course, course_details = [])
 
 
-@bp.route('/<int:course_id>/assignments/add', methods=['GET', 'POST'])
+@bp.route('/<int:course_id>/components/add_single_assignment', methods=['GET', 'POST'])
 @login_required
-def add_assignment(course_id):
+def add_single_assignment(course_id):
     # check if this course belongs to the logged in user
     course = fetch_course(course_id)
     if course is None:
@@ -72,12 +73,32 @@ def add_assignment(course_id):
         
         return redirect(url_for('course.course_landing', course_id = course_id))
 
-    return render_template('course/add_assignment.html')
+    return render_template('course/add_single_assignment.html')
 
 # @bp.route('/assignments/edit/<int:assignment_id>')
 # def edit_assignment(assignment_id):
 #     # your code here
 
-# @bp.route('/assignments/delete/<int:assignment_id>')
-# def delete_assignment(assignment_id):
-#     # your code here
+@bp.route('/<int:course_id>/components/delete/<int:component_id>', methods=['GET'])
+@login_required
+def delete_component(course_id, component_id):
+    # check if this course belongs to the logged in user
+    course = fetch_course(course_id)
+    if course is None:
+        return render_template('error.html', 
+            message = 'You do not have permission to access this course.'
+        ), 403
+    
+    users = get_db().users
+
+    # Remove the course with the given ID from the user's profile
+    course.remove_component(str(component_id))
+
+    # Update the user's profile in the database
+    users.update_one(
+        {'_id': g.user['_id']},
+        {'$set': {'profile': g.profile._to_json()}}
+    )
+
+    # Return a redirect to the profile page
+    return redirect(url_for('course.course_landing', course_id = course_id))
