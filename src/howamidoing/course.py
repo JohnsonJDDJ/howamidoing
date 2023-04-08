@@ -126,7 +126,6 @@ def add_single_assignment(course_id):
         ), 403
     
     if request.method == 'POST':
-        print("received")
         # Get db
         users = get_db().users
         error = None

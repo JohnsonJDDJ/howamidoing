@@ -8,6 +8,24 @@ from howamidoing.db import get_db
 
 bp = Blueprint('profile', __name__)
 
+def validate_course(form):
+    """
+    Validate course.
+    Name, status, and corr should all have non empty
+    values handled by html5.
+    """
+    invalid_corr_message = "Correlation coefficient must be a number between 0 and 1."
+    # Validate corr
+    try:
+        corr = float(form['corr'])
+        if corr < 0 or corr > 1:
+            return False, invalid_corr_message
+    except ValueError:
+        return False, invalid_corr_message
+
+    return True, None
+
+
 @bp.route('/')
 def index():
     """
@@ -30,18 +48,19 @@ def index():
 @login_required
 def add_course():
     if request.method == 'POST':
-        name = request.form['name']
-        corr = float(request.form['corr'])
-        status = request.form['status']
+        # Get db
         users = get_db().users
         error = None
 
-        if not name:
-            error = 'Title is required.'
-
-        if error is not None:
+        # Validate form
+        is_valid, error = validate_course(request.form)
+        if not is_valid:
             flash(error)
         else:
+            name = request.form['name']
+            corr = float(request.form['corr'])
+            status = request.form['status']
+
             # Create new course and set its status
             new_course = g.profile.add_course(corr=corr, name=name)
             new_course.set_status(status)

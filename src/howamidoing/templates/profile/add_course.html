@@ -20,7 +20,7 @@
     </div>
     <div id="corr" class="label-input-pair">
       <label>Correlation coefficient</label>
-      <input name="corr" value="0.6">{{ request.form['corr'] }}
+      <input name="corr" value="{{ request.form.get('corr', '0.6') }}" required>
     </div>
     <input type="submit" value="Save">
   </form>
