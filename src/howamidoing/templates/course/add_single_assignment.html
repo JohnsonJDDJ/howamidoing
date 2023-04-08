@@ -27,7 +27,7 @@
   </div>
   <div id="upper" class="label-input-pair">
     <label>Upper bound score for this assignment</label>
-    <input name="upper" value="100" required>{{ request.form['upper'] }}
+    <input name="upper" value="{{ request.form.get('upper', '100') }}" required>
   </div>
   <div id="mu" class="label-input-pair">
     <label>Class average for this assignment</label>
