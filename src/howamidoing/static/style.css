@@ -44,8 +44,9 @@ input.danger { color: #cc2f2e; }
 input[type=submit] { align-self: start; min-width: 10em; }
 
 .card { margin: 2rem 0; height: 12rem; width: auto; display: flex; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); }
-.card > a:hover, .card > a:active { background-color: rgb(240, 243, 238); text-decoration: none; }
-.card > .main { flex:auto; border-right: 2px solid rgb(240, 243, 238); }
-.card > .main > h1 {margin: 1rem 1rem; }
-.card > .delete { display: flex; justify-content: center; align-items: center; width: 3em; }
-.card > .delete > i { margin: auto; }
+.card a:hover, .card a:active { background-color: rgb(240, 243, 238); text-decoration: none; }
+.card .main { flex:auto; border-right: 2px solid rgb(240, 243, 238); }
+.card .main > h1 {margin: 1rem 1rem; }
+.card .buttons { display: flex; flex-direction: column; width: 3em; }
+.card .buttons a { display: flex; justify-content: center; align-items: center; width: 3em; height: 6em; }
+.card .buttons i { margin: auto; }

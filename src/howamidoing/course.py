@@ -5,25 +5,10 @@ from werkzeug.exceptions import abort
 
 from howamidoing.auth import login_required
 from howamidoing.db import get_db
-
-from .objects import Profile, Course
+from howamidoing.objects import Profile, Course
+from howamidoing.app_utils import fetch_course
 
 bp = Blueprint('course', __name__, url_prefix='/course')
-
-
-def fetch_course(course_id : str) -> Course:
-    """
-    Check if this course belongs to the logged in user.
-    Return None if check failed, else return the course
-    object.
-    """
-    # Make sure course_id is string
-    course_id = str(course_id)  
-    profile : Profile = g.profile
-    if course_id not in profile.get_courses():
-        return None
-    else:
-        return profile.get_courses()[course_id]
 
 
 def validate_single_uncurved_assignment(form: dict):
@@ -95,6 +80,7 @@ def validate_single_curved_assignment(form: dict):
         return False, invalid_sigma_message
     
     return True, None
+
 
 @bp.route('/<int:course_id>', methods=['GET', 'POST'])
 @login_required
