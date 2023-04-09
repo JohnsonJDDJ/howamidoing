@@ -1,30 +1,12 @@
 from flask import (
     Blueprint, flash, g, redirect, render_template, request, url_for, session
 )
-from werkzeug.exceptions import abort
 
 from howamidoing.auth import login_required
 from howamidoing.db import get_db
-from howamidoing.app_utils import fetch_course
+from howamidoing.app_utils import fetch_course, validate_course
 
 bp = Blueprint('profile', __name__)
-
-def validate_course(form):
-    """
-    Validate course.
-    Name, status, and corr should all have non empty
-    values handled by html5.
-    """
-    invalid_corr_message = "Correlation coefficient must be a number between 0 and 1."
-    # Validate corr
-    try:
-        corr = float(form['corr'])
-        if corr < 0 or corr > 1:
-            return False, invalid_corr_message
-    except ValueError:
-        return False, invalid_corr_message
-
-    return True, None
 
 
 @bp.route('/')
