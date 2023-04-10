@@ -1,6 +1,15 @@
 from time import time
 
-ID = str
+class ID:
+    """Identifier for objects"""
+    def __init__(self, value: str) -> None:
+        self.value : str = value
+    
+    def __str__(self) -> str:
+        return self.value
+    
+    def __repr__(self) -> str:
+        return str(self)
 
 def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
     """
@@ -17,4 +26,4 @@ def generate_id(object) -> ID:
     """Generate an uniqe id for an object"""
     # Code motivated by chatGPT, 2022
     # chat.openai.com
-    return str(int(time() * 1000000 + id(object)))
+    return ID(str(int(time() * 1000000 + id(object))))

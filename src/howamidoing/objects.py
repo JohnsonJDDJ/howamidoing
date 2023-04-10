@@ -3,7 +3,7 @@ from copy import deepcopy
 from math import isclose
 from scipy.stats import truncnorm
 from typing import Union
-from .utils import *
+from .utils import ID, generate_id, correlated_sigma_sum
 
 class Assignment:
     """
