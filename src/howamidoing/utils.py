@@ -1,5 +1,7 @@
 from time import time
 
+ID = str
+
 def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
     """
     Compute the standard deviation of the sum of two normally
@@ -11,7 +13,7 @@ def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
     return (first_term + second_term) ** 0.5
 
 
-def generate_id(object) -> str:
+def generate_id(object) -> ID:
     """Generate an uniqe id for an object"""
     # Code motivated by chatGPT, 2022
     # chat.openai.com

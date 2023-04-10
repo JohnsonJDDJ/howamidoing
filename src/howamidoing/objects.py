@@ -112,7 +112,7 @@ class Assignment:
         self.before_clobber = json["before_clobber"]
 
 
-    def get_id(self) -> str:
+    def get_id(self) -> ID:
         """Return id"""
         return self.id
 
@@ -349,14 +349,14 @@ class AssignmentGroup:
         return NotImplementedError
 
 
-    def get_id(self) -> str:
+    def get_id(self) -> ID:
         return self.id
 
 
     def get_name(self) -> str:
         return self.name
     
-    def get_assignments(self) -> dict[str, Assignment]:
+    def get_assignments(self) -> dict[ID, Assignment]:
         return self.assignments
 
     
@@ -517,6 +517,14 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         return summary
 
 
+Component = Union[
+    CurvedAssignmentGroup, 
+    UncurvedAssignmentGroup,
+    CurvedSingleAssignment,
+    UncurvedSingleAssignment
+]
+
+
 class Course:
     """
     A course. Comprised of a list of assignments and/or assignment groups
@@ -534,13 +542,6 @@ class Course:
     name : :obj:`str`, optional
         Name of this course. Defaults to 'My Course'.
     """
-
-    Component = Union[
-        CurvedAssignmentGroup, 
-        UncurvedAssignmentGroup,
-        CurvedSingleAssignment,
-        UncurvedSingleAssignment
-    ]
 
     _allowed_status = {
         "In Progress", 
@@ -656,7 +657,7 @@ class Course:
         self.components = json["components"]
             
  
-    def get_id(self) -> str:
+    def get_id(self) -> ID:
         """Return id"""
         return self.id
 
@@ -666,7 +667,7 @@ class Course:
         return self.name
 
 
-    def get_components(self) -> dict[str, Component]:
+    def get_components(self) -> dict[ID, dict]:
         return self.components
 
 
@@ -831,7 +832,7 @@ class Course:
             component_summary.update(component_info) # Merge two dictionary
             component = component_summary["object"] 
             component_summary["name"] = component.get_name()
-            del component_summary["object"] # Remove object
+            del component_summary["object"] # Remove object field
             try:
                 component_summary["summary"] = component.get_summary()
             except Exception as e:
@@ -930,8 +931,8 @@ class Course:
 
     
     def apply_clobber(
-        self, source: str, 
-        targets: list[str], 
+        self, source: ID, 
+        targets: list[ID], 
         capacity: int = -1
     ) -> None:
         # Check for errors:
@@ -998,7 +999,7 @@ class Course:
         self.clobber_info = None
 
     
-    def remove_component(self, component_id: str) -> None:
+    def remove_component(self, component_id: ID) -> None:
         # Revert clobber before removing components
         self.revert_clobber()
         if component_id in self.components:
@@ -1015,7 +1016,7 @@ class Profile():
 
     
     def __init__(self, override_json: dict = None) -> None:
-        self.courses : dict[str, Course] = {}
+        self.courses : dict[ID, Course] = {}
         if override_json is not None:
             self._from_json(override_json)
             
@@ -1024,11 +1025,11 @@ class Profile():
         return self.courses.__repr__()
 
     
-    def __getitem__(self, key: str) -> Course:
+    def __getitem__(self, key: ID) -> Course:
         return self.courses[key]
 
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, key: ID) -> None:
         del self.courses[key]
 
     
@@ -1044,7 +1045,7 @@ class Profile():
             self.courses[id] = Course(override_json=course_json)
 
 
-    def get_courses(self) -> dict[str, Course]:
+    def get_courses(self) -> dict[ID, Course]:
         return self.courses
 
     
@@ -1087,7 +1088,7 @@ class Profile():
 
     def remove_course(
             self, 
-            course_id : str
+            course_id : ID
         ) -> None:
         """
         Remove a course by its id. Does nothing if course
