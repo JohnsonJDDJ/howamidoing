@@ -2,14 +2,18 @@ from time import time
 
 class ID:
     """Identifier for objects"""
-    def __init__(self, value: str) -> None:
-        self.value : str = value
+    def __init__(self, value) -> None:
+        try:
+            self.value = str(value)
+        except:
+            raise TypeError(f"{type(value)} cannot be converted to string.")
     
     def __str__(self) -> str:
         return self.value
     
     def __repr__(self) -> str:
         return str(self)
+
 
 def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
     """
