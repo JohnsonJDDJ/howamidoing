@@ -79,7 +79,7 @@ def register():
 
         if is_username_valid and is_password_valid:
             # Create new profile for user and store user data
-            profile = Profile()._to_json()
+            profile = Profile().to_json()
             password = generate_password_hash(password)
             users.insert_one({
                 "username": username, 
@@ -114,7 +114,7 @@ def login():
 
 @bp.before_app_request
 def load_logged_in_user():
-    user_id =  ObjectId(session.get("user_id"))
+    user_id = ObjectId(session.get("user_id"))
     users = get_db().users
 
     if user_id is None:

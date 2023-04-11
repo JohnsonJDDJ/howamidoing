@@ -51,7 +51,7 @@ def add_course():
             # Update the user's profile in the database
             users.update_one(
                 {"_id": g.user["_id"]},
-                {"$set": {"profile": g.profile._to_json()}})
+                {"$set": {"profile": g.profile.to_json()}})
             
             return redirect(url_for('index'))
 
@@ -110,7 +110,7 @@ def delete_course(course_id):
     users = get_db().users
     users.update_one(
         {'_id': g.user['_id']},
-        {'$set': {'profile': g.profile._to_json()}}
+        {'$set': {'profile': g.profile.to_json()}}
     )
 
     # Return a redirect to the profile page

@@ -1,5 +1,7 @@
 from flask import g
-from howamidoing.objects import Course, Profile, Component
+from howamidoing.objects import (
+    Course, Profile, Component
+)
 from howamidoing.utils import ID
 
 
@@ -26,9 +28,14 @@ def fetch_component(course : Course, component_id : ID) -> Component:
     Return None if check failed, else return the component
     object.
     """
-    # Make sure component_id is a string
+    # Make sure component_id is ID
     component_id = ID(component_id)
     components_info = course.get_components()
+    if component_id not in components_info:
+        return None
+    else:
+        return components_info[component_id]["object"]
+
 
 def validate_course(form):
     """
@@ -117,3 +124,71 @@ def validate_single_curved_assignment(form: dict):
         return False, invalid_sigma_message
     
     return True, None
+
+
+def create_single_assignment_from_form(
+        course: Course, 
+        form: dict, 
+        component_id: ID = None
+    ):
+    """
+    Add the single assignment from the request form to 
+    user's profile. 
+    
+    If ``component_id`` is specified, then
+    remove any component in the course with the same
+    id, create a new single assignment object and explicitly
+    set the id for the newly created object.
+
+    Else, create a new single assignment object with its generic
+    id. 
+    """
+    # Make sure component_id is ID
+    if component_id is not None:
+        component_id = ID(component_id)
+
+    # Added assignment is curved
+    if form['curved'] == "Curved":
+        
+        # Validate form
+        is_valid, error = validate_single_curved_assignment(form)
+
+        # Return error if not valid
+        if not is_valid:
+            return error
+
+        # Fetch data from form and update profile
+        name = form["name"]
+        weight = float(form["weight"])
+        score = float(form["score"])
+        upper = float(form["upper"])
+        mu = float(form["mu"])
+        sigma = float(form["sigma"])
+
+        # Add the assignment to user's profile
+        if component_id is not None:
+            course.remove_component(component_id)
+        course.add_curved_single(weight, score, name, upper, mu, sigma, override_id=component_id)
+
+    # Added assignment is uncurved
+    elif form['curved'] == "Not Curved":
+
+        # Validate form
+        is_valid, error = validate_single_uncurved_assignment(form)
+
+        # Return error if not valid
+        if not is_valid:
+            return error
+
+        # Fetch data from form and update profile
+        name = form["name"]
+        weight = float(form["weight"])
+        score = float(form["score"])
+        upper = float(form["upper"])
+
+         # Add the assignment to user's profile
+        if component_id is not None:
+            course.remove_component(component_id)
+        course.add_uncurved_single(weight, score, name, upper, override_id=component_id)
+
+    return None

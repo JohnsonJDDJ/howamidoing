@@ -39,6 +39,7 @@ class Assignment:
         mu: float = None,
         sigma: float = None,
         curved: bool = None,
+        override_id: ID = None,
         override_json: dict = None
     ) -> None:
 
@@ -47,7 +48,7 @@ class Assignment:
             self._from_json(override_json)
             return
 
-        self.id = generate_id(self)
+        self.id = ID(override_id) if override_id else generate_id(self) 
         self.name = name
         self.upper = upper
         
@@ -99,7 +100,7 @@ class Assignment:
     
     def _from_json(self, json: dict) -> None:
         """Load and override all data from dictionary"""
-        self.id = json["id"]
+        self.id = ID(json["id"])
         self.name = json["name"]
         self.weight = json["weight"]
         self.score = json["score"]
@@ -220,11 +221,12 @@ class CurvedSingleAssignment(Assignment):
         upper: float = 100, 
         mu: float = None, 
         sigma: float = None,
+        override_id: ID = None,
         override_json: dict = None
     ) -> None:
         if weight > 1.0 or weight <= 0: 
             raise ValueError(f"Invalid weight: {weight}.")
-        super().__init__(score, name, upper, mu, sigma, True, override_json)
+        super().__init__(score, name, upper, mu, sigma, True, override_id, override_json)
         # When override_json is used, weight will be a dummy
         # value. Thus only assign weight when override_json
         # is not used.
@@ -263,11 +265,12 @@ class UncurvedSingleAssignment(Assignment):
         score: float, 
         name: str = None, 
         upper: float = 100,
+        override_id : ID = None,
         override_json: dict = None
     ) -> None:
         if weight > 1.0 or weight <= 0: 
             raise ValueError(f"Invalid weight: {weight}.")
-        super().__init__(score, name, upper, curved=False, override_json=override_json)
+        super().__init__(score, name, upper, curved=False, override_id=override_id, override_json=override_json)
         # When override_json is used, weight will be a dummy
         # value. Thus only assign weight when override_json
         # is not used.
@@ -289,6 +292,7 @@ class AssignmentGroup:
         name: str = None, 
         corr: float = None,
         num_drops: int = 0,
+        override_id: ID = None,
         override_json: dict = None
     ) -> None:
         # Overriding all step with data from dictionary
@@ -298,7 +302,7 @@ class AssignmentGroup:
 
         if weight > 1.0 or weight <= 0: raise ValueError(f"Invalid weight: {weight}.")
 
-        self.id = generate_id(self)
+        self.id = ID(override_id) if override_id else generate_id(self)
         self.weight = weight
         self.name = name
         self.corr = corr
@@ -332,7 +336,7 @@ class AssignmentGroup:
     
     def _from_json(self, json: dict) -> None:
         """Load and override all data from dictionary"""
-        self.id = json["id"]
+        self.id = ID(json["id"])
         self.name = json["name"]
         self.weight = json["weight"]
         self.corr = json["corr"]
@@ -412,9 +416,10 @@ class CurvedAssignmentGroup(AssignmentGroup):
         name: str = None, 
         corr: float = 0.6, 
         num_drops: int = 0, 
+        override_id : ID = None,
         override_json: dict = None
     ) -> None:
-        super().__init__(weight, name, corr, num_drops, override_json)
+        super().__init__(weight, name, corr, num_drops, override_id, override_json)
 
 
     def _to_json(self) -> dict:
@@ -424,13 +429,14 @@ class CurvedAssignmentGroup(AssignmentGroup):
 
 
     def add_assignment(self, score: float, name: str=None,
-                       upper: float=100, mu: float=None, sigma: float=None) -> None:
+                       upper: float=100, mu: float=None, sigma: float=None,
+                       override_id: ID = None) -> None:
 
         if name == None: name = "Assignment " + str(len(self.assignments) + 1)
 
         new_assignment = Assignment(score, name=name, 
                                     upper=upper, mu=mu, sigma=sigma, 
-                                    curved=True)
+                                    curved=True, override_id=override_id)
         id = new_assignment.get_id()
         self.assignments[id] = new_assignment
 
@@ -479,9 +485,10 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         name: str = None, 
         corr: float = None, 
         num_drops: int = 0, 
+        override_id: ID = None,
         override_json: dict = None
     ) -> None:
-        super().__init__(weight, name, corr, num_drops, override_json)
+        super().__init__(weight, name, corr, num_drops, override_id, override_json)
 
 
     def _to_json(self) -> dict:
@@ -491,11 +498,12 @@ class UncurvedAssignmentGroup(AssignmentGroup):
 
 
     def add_assignment(self, score: float, name: str = None,
-                       upper: float = 100) -> None:
+                       upper: float = 100, override_id: ID = None) -> None:
 
         if name == None: name = "Assignment " + str(len(self.assignments) + 1)
 
-        new_assignment = Assignment(score, name=name, upper=upper, curved=False)
+        new_assignment = Assignment(score, name=name, upper=upper, curved=False, 
+                                    override_id=override_id)
         id = new_assignment.get_id()
         self.assignments[id] = new_assignment
         
@@ -553,6 +561,7 @@ class Course:
         self, 
         corr: float = 0.6, 
         name: str = None,
+        override_id: ID = None,
         override_json: dict = None
     ) -> None:
         # Overriding all step with data from dictionary
@@ -562,7 +571,7 @@ class Course:
 
         if corr < 0 or corr > 1.0: raise ValueError(f"Invalid correlation coefficient: {corr}.")
 
-        self.id = generate_id(self)
+        self.id = ID(override_id) if override_id else generate_id(self)
         self.corr = corr
         self.name = name if name else "My Course"
         self.status = "Other"
@@ -631,7 +640,7 @@ class Course:
 
     def _from_json(self, json: dict) -> None:
         """Load and override all data from dictionary"""
-        self.id = json["id"]
+        self.id = ID(json["id"])
         self.name = json["name"]
         self.corr = json["corr"]
         self.status = json["status"]
@@ -846,12 +855,13 @@ class Course:
 
 
     def add_curved_single(self, weight: float, score: float, name: str = None,
-                          upper: float = 100, mu: float = None, sigma: float = None
+                          upper: float = 100, mu: float = None, sigma: float = None,
+                          override_id : ID = None
                           ) -> CurvedSingleAssignment:
 
         if name == None: name = "Assignment " + str(len(self.components) + 1)
         new_component = CurvedSingleAssignment(
-            weight, score, name, upper, mu, sigma
+            weight, score, name, upper, mu, sigma, override_id=override_id
         )
         id = new_component.get_id()
 
@@ -867,10 +877,10 @@ class Course:
     
 
     def add_uncurved_single(self, weight: float, score: float, name: str = None, 
-                            upper: float = 100) -> UncurvedSingleAssignment:
+                            upper: float = 100, override_id: ID = None) -> UncurvedSingleAssignment:
         if name == None: name = "Assignment " + str(len(self.components) + 1)
         new_component = UncurvedSingleAssignment(
-            weight, score, name, upper
+            weight, score, name, upper, override_id=override_id
         )
         id = new_component.get_id()
 
@@ -890,11 +900,12 @@ class Course:
         weight: float, 
         name: str = None,
         corr: float = None, 
-        num_drops: int = 0
+        num_drops: int = 0,
+        override_id: ID = None
     ) -> CurvedAssignmentGroup:
         if corr == None: corr = self.corr
         if name == None: name = "Grouped Assignments " + str(len(self.components) + 1)
-        new_component = CurvedAssignmentGroup(weight, name, corr, num_drops)
+        new_component = CurvedAssignmentGroup(weight, name, corr, num_drops, override_id=override_id)
         id = new_component.get_id()
 
         info = {
@@ -913,10 +924,11 @@ class Course:
         weight: float, 
         name: str = None, 
         corr: float = None,
-        num_drops: int = 0
+        num_drops: int = 0,
+        override_id: ID = None
     ) -> UncurvedAssignmentGroup:    
         if name == None: name = "Grouped Assignments " + str(len(self.components) + 1)
-        new_component = UncurvedAssignmentGroup(weight, name, corr, num_drops)
+        new_component = UncurvedAssignmentGroup(weight, name, corr, num_drops, override_id=override_id)
         id = new_component.get_id()
 
         info = {
@@ -1000,6 +1012,10 @@ class Course:
 
     
     def remove_component(self, component_id: ID) -> None:
+        """
+        Remove component with ID of ``component_id``.
+        If such component does not exist, no-op.
+        """
         # Revert clobber before removing components
         self.revert_clobber()
         if component_id in self.components:
@@ -1018,7 +1034,7 @@ class Profile():
     def __init__(self, override_json: dict = None) -> None:
         self.courses : dict[ID, Course] = {}
         if override_json is not None:
-            self._from_json(override_json)
+            self.from_json(override_json)
             
 
     def __repr__(self) -> str:
@@ -1033,13 +1049,13 @@ class Profile():
         del self.courses[key]
 
     
-    def _to_json(self) -> dict:
+    def to_json(self) -> dict:
         output = deepcopy(self.courses)
         for id, course in output.items():
             output[id] = course._to_json()
         return output
     
-    def _from_json(self, json: dict) -> None:
+    def from_json(self, json: dict) -> None:
         self.courses = {}
         for id, course_json in json.items():
             self.courses[id] = Course(override_json=course_json)

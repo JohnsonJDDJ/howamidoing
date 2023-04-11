@@ -1,8 +1,10 @@
 from time import time
 
-class ID:
+class ID(str):
     """Identifier for objects"""
+
     def __init__(self, value) -> None:
+        super().__init__()
         try:
             self.value = str(value)
         except:
@@ -13,7 +15,13 @@ class ID:
     
     def __repr__(self) -> str:
         return str(self)
-
+    
+    def __hash__(self):
+        return hash(self.value)
+    
+    def __eq__(self, other):
+        return self.value.__str__() == other.__str__()
+    
 
 def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
     """
