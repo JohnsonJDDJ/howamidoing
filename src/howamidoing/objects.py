@@ -3,7 +3,7 @@ from copy import deepcopy
 from math import isclose
 from scipy.stats import truncnorm
 from typing import Union
-from .utils import ID, generate_id, correlated_sigma_sum
+from .utils import ID, generate_id, correlated_sigma_sum, Summary
 
 class Assignment:
     """
@@ -56,21 +56,21 @@ class Assignment:
             raise ValueError("Curved assignment must have mean and standard deviation.")
 
         self.curved = curved
-        self.mu = mu / self.upper if mu else None
-        self.sigma = sigma / self.upper if sigma else None
+        self.mu = mu if mu else None
+        self.sigma = sigma if sigma else None
         self.clobbered = False
         self.before_clobber = None
 
         # Curved assignment. Calculate z-score.
         if curved:
-            self.score = score / self.upper
+            self.score = score 
             self.zscore = (self.score - self.mu) / self.sigma
         # Un-curved assignment, zscore is 0.
         else:
             self.zscore = 0
-            self.score = score / self.upper
+            self.score = score 
 
-        self.weight = None # Undefined in this class
+        self.weight = None
 
 
     def __repr__(self) -> str:
@@ -145,25 +145,20 @@ class Assignment:
         return self.weight
 
         
-    def get_summary(self) -> dict:
+    def get_summary(self) -> Summary:
         """
         Return a dictionary of brief summaries about this
         assignment. Includes score and potentially the
         mean, standard deviation, and zscore of this 
         assignment if curved.
         """
-        summary = dict()
-        summary["score"] = self.score
-        # For uncurved assignment, do not pass in
-        # any other stats except the score.
-        if not self.curved:
-            summary["stats"] = dict()
-        else:
-            summary["stats"] = {
-                "zscore" : self.zscore,
-                "mu" : self.mu,
-                "sigma" : self.sigma
-            }
+        summary = Summary(
+            self.score, 
+            self.upper,
+            self.zscore,
+            self.mu,
+            self.sigma)
+        
         return summary
 
     
@@ -443,7 +438,7 @@ class CurvedAssignmentGroup(AssignmentGroup):
 
     def _calculate_summaries(self, assignments: Iterable[Assignment]) -> dict:
         """
-        Calculate averaged score, mu and sigma. Then
+        Calculate sums for score, mu and sigma. Then
         calculate zscore.
         """
         final_mu, final_sigma, final_score = 0, 0, 0
@@ -451,11 +446,11 @@ class CurvedAssignmentGroup(AssignmentGroup):
 
         for assignment in assignments:
             summary = assignment.get_summary()
-            final_mu += summary["stats"]["mu"] / n
-            final_score += summary["score"] / n
+            final_mu += summary["stats"]["mu"]
+            final_score += summary["score"]
             final_sigma = correlated_sigma_sum(
                 final_sigma,
-                summary["stats"]["sigma"] / n,
+                summary["stats"]["sigma"],
                 self.corr
             )
 
