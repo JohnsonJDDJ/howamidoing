@@ -382,12 +382,12 @@ class AssignmentGroup:
         return assignments, drop_applied
     
 
-    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> dict:
+    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> Summary:
         """Calculate the detail summary of assignments"""
         return NotImplementedError
 
 
-    def get_summary(self) -> dict:
+    def get_summary(self) -> Summary:
 
         if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
 
@@ -436,33 +436,32 @@ class CurvedAssignmentGroup(AssignmentGroup):
         self.assignments[id] = new_assignment
 
 
-    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> dict:
+    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> Summary:
         """
         Calculate sums for score, mu and sigma. Then
         calculate zscore.
         """
         final_mu, final_sigma, final_score = 0, 0, 0
-        n = len(assignments)
 
         for assignment in assignments:
             summary = assignment.get_summary()
-            final_mu += summary["stats"]["mu"]
-            final_score += summary["score"]
+            final_score += summary["_percentage"]
+            final_mu += summary["_mu"]
             final_sigma = correlated_sigma_sum(
                 final_sigma,
-                summary["stats"]["sigma"],
+                summary["_sigma"],
                 self.corr
             )
 
         final_zscore = (final_score - final_mu) / final_sigma
 
-        summary = dict()
-        summary["score"] = final_score
-        summary["stats"] = {
-            "zscore" : final_zscore,
-            "mu" : final_mu,
-            "sigma" : final_sigma
-        }
+        summary = Summary(
+            final_score,
+            1.0,
+            final_zscore,
+            final_mu,
+            final_sigma
+        )
 
         return summary
 
@@ -503,19 +502,14 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         self.assignments[id] = new_assignment
         
 
-    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> dict:
-        """Calculate averaged score"""
+    def _calculate_summaries(self, assignments: Iterable[Assignment]) -> Summary:
+        """Calculate sums for score and upper"""
         final_score = 0
-        n = len(assignments)
 
         for assignment in assignments:
-            final_score += assignment.get_score()
+            final_score += assignment.get_summary()["_percentage"]
 
-        final_score = final_score / n
-
-        summary = dict()
-        summary["score"] = final_score
-        summary["stats"] = dict()
+        summary = Summary(final_score, 1.0)
 
         return summary
 
@@ -686,16 +680,17 @@ class Course:
             raise ValueError("Invalid status.")
 
 
-    def _calculate_curved_summary(
+    def _calculate_curved_info(
         self, 
         assignments: Iterable[Component]
     ) -> dict[str, float]:
         """
         Calculate weighted score, mu, sigma and zscore 
-        for curved components
+        for curved components as a dictionary
         """
         curved = {
             "score": 0,
+            "upper": 0,
             "mu": 0,
             "sigma": 0,
             "zscore": 0,
@@ -709,11 +704,11 @@ class Course:
 
         for component in assignments:
             summary = component.get_summary()
-            curved["score"] += summary["score"] * component.get_weight()
-            curved["mu"] += summary["stats"]["mu"] * component.get_weight()
+            curved["score"] += summary["_percentage"] * component.get_weight()
+            curved["mu"] += summary["_mu"] * component.get_weight()
             curved["sigma"] = correlated_sigma_sum(
                 curved["sigma"],
-                summary["stats"]["sigma"] * component.get_weight(),
+                summary["_sigma"] * component.get_weight(),
                 self.corr
             )
         curved["zscore"] = (curved["score"] - curved["mu"]) / curved["sigma"]
@@ -721,90 +716,62 @@ class Course:
         return curved
 
 
-    def _calculate_uncurved_summary(
+    def _calculate_uncurved_info(
         self,
         assignments: Iterable[Component]
-    ) -> float:
-        """Calculate weighted score for uncurved components"""
-        uncurved_score = 0
+    ) -> dict[str, float]:
+        """
+        Calculate weighted score for uncurved components
+        as a dictionary
+        """
+        uncurved = {"score": 0}
         for component in assignments:
             summary = component.get_summary()
-            uncurved_score += summary["score"] * component.get_weight()
-        return uncurved_score
+            uncurved["score"] += summary["_percentage"] * component.get_weight()
+        return uncurved
 
 
     def _calculate_summary(
         self,
         curved: Iterable[Component],
         uncurved: Iterable[Component],
-        total: float
-    ) -> dict:
+        total_weight: float
+    ) -> Summary:
         """
         Calculte weighted scores, mu, sigma and zscore for
-        all assignments
+        all assignments. Then estimate the letter grade.
         """
         # Combine everthing
-        curved_info = self._calculate_curved_summary(curved)
-        uncurved_score = self._calculate_uncurved_summary(uncurved)
+        curved_info = self._calculate_curved_info(curved)
+        uncurved_info = self._calculate_uncurved_info(uncurved)
 
-        overall_score = curved_info["score"] + uncurved_score
-        final_score = overall_score / total
+        overall_score = curved_info["score"] + uncurved_info["score"]
+        final_score = overall_score / total_weight
 
-        overall_mu = curved_info["mu"] + uncurved_score
-        final_mu = overall_mu / total
+        overall_mu = curved_info["mu"] + uncurved_info["score"]
+        final_mu = overall_mu / total_weight
 
-        final_sigma = curved_info["sigma"] / total
+        final_sigma = curved_info["sigma"] / total_weight
         
-        summary = dict()
-        summary["score"] = final_score
         if curved_info["curved"]:
-            summary["stats"] = {
-                "zscore" : curved_info["zscore"],
-                "mu" : final_mu,
-                "sigma" : final_sigma
-            }  
+            summary = Summary(
+                final_score, 
+                1.0,
+                curved_info["zscore"], 
+                final_mu,
+                final_sigma)
         else:
-            summary["stats"] = dict() 
+            summary = Summary(final_score, 1.0)
 
         return summary
 
-
-    def get_summary(self) -> dict:
-        """
-        Overall statistics of the course
-        """
-        # Iterate over components:
-        # Classify into curved and uncurved.
-        # Compute the total weight.
-        if len(self.components) == 0:
-            raise AssertionError("No assignments in this course.")
-        total, curved, uncurved = 0, [], []
-        for component in self.components.values():
-            if component["curved"]: 
-                curved.append(component["object"])
-            else: uncurved.append(component["object"])
-            total += component["weight"]
-            if total > 1.0: raise ValueError("Total weight exceeds one.")
-        
-        # Check if the weights are incomplete
-        is_final = isclose(total, 1.0)
-
-        summary = self._calculate_summary(curved, uncurved, total)        
-        summary["curved"] = bool(len(summary["stats"]))
-        summary["is_final"] = is_final
-
-        return summary
-
-
-    def get_grade(self, show_boundary=False) -> str:
+    def _get_grade(self, summary : Summary, show_boundary=False) -> str:
         """Calclate the letter grade for ths course"""
         # Calculate letter grade using scipy.stat.truncnorm
-        summary = self.get_summary()
-
-        if summary["curved"]:
-            a = (0 - summary["stats"]["mu"]) / summary["stats"]["sigma"]
-            b = (1 - summary["stats"]["mu"]) / summary["stats"]["sigma"]
-            X = truncnorm(a, b, loc=summary["stats"]["mu"], scale=summary["stats"]["sigma"])
+        if summary["class_curved"]:
+            a = (0 - summary["_mu"]) / summary["_sigma"]
+            b = (1 - summary["_mu"]) / summary["_sigma"]
+            X = truncnorm(a, b, loc=summary["_mu"], scale=summary["_sigma"])
             true_boundaries = {
                 k: X.ppf(v) for k,v in self.curved_boundaries.items()
             }
@@ -817,10 +784,42 @@ class Course:
 
         for k, v in true_boundaries.items():
             letter_grade = k
-            if summary["score"] >= v:
+            if summary["_percentage"] >= v:
                 break
         
         return letter_grade
+
+
+    def get_summary(self) -> Summary:
+        """
+        Overall statistics of the course
+        """
+        # Error checking
+        if len(self.components) == 0:
+            raise AssertionError("No assignments in this course.")
+    
+        # Iterate over components:
+        # Classify into curved and uncurved.
+        # Compute the total weight.
+        total_weight, curved, uncurved = 0, [], []
+        for component in self.components.values():
+            if component["curved"]: 
+                curved.append(component["object"])
+            else: uncurved.append(component["object"])
+            total_weight += component["weight"]
+            if total_weight > 1.0: raise ValueError("Total weight exceeds one.")
+        
+        # Check if the weights are incomplete
+        is_final = isclose(total_weight, 1.0)
+
+        summary = self._calculate_summary(curved, uncurved, total_weight)        
+        summary["class_curved"] = bool(len(curved))
+        summary["is_final"] = is_final
+
+        # Estimate letter grade
+        summary["grade"] = self._get_grade(summary)
+        
+        return summary
 
 
     def get_detail(self) -> list:

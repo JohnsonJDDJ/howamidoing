@@ -30,14 +30,16 @@ class Summary():
     and ``Course``s.
     
     {
-        "percentage" : percentage score (12.34%), [for all]
-        "score" : score (90.50), [for all]
+        "_percentage" : float fraction score (0.82343172...), [for all]
+        "percentage" : string percentage score (82.34%), [for all]
         "zscore" : zscore (1.21), [for all curved]
-        "mu" : mu (30.25), [for all curved]
-        "sigma" : sigma (12.53), [for all curved]
+        "_mu" : fraction mu (0.3025...), [for all curved]
+        "mu" : percentage mu (30.25%), [for all curved]
+        "_sigma" : fraction sigma (0.1253...) [for all curved]
+        "sigma" : percentage sigma (12.53), [for all curved]
         "drop_applied" : bool, [Group]
         "is_final" : bool, [Course]
-        "curved" : bool, [Course]
+        "class_curved" : bool, [Course]
         "grade" : bool, [Course]
     }
     """
@@ -51,11 +53,17 @@ class Summary():
             sigma : float = None,
             ) -> None:
         summary = dict()
-        summary["percentage"] = str(round(score / upper, 4) * 100) + "%"
-        summary["score"] = str(round(score, 2))
-        summary["zscore"] = str(round(zscore, 2)) if zscore else None
-        summary["mu"] = str(round(mu, 2)) if mu else None
-        summary["sigma"] = str(round(sigma, 2)) if sigma else None
+        summary["_percentage"] = score / upper
+        summary["percentage"] = self.percentage(summary["_percentage"])
+        summary["zscore"] = round(zscore, 2) if zscore else None
+        summary["_mu"] = mu / upper if mu else None
+        summary["mu"] = self.percentage(summary["_mu"]) if mu else None
+        summary["_sigma"] = sigma / upper if sigma else None
+        summary["sigma"] = self.percentage(summary["_sigma"]) if sigma else None
+        summary["drop_applied"] = None
+        summary["is_final"] = None
+        summary["class_curved"] = None
+        summary["grade"] = None
 
         self.summary = summary
 
@@ -68,6 +76,14 @@ class Summary():
     def __getitem__(self, key: str) -> str:
         return self.summary[key]
 
+    def __setitem__(self, key: str, value) -> None:
+        if key not in self.summary:
+            raise ValueError("Summary cannot accept assignment on unsupported fields")
+        self.summary[key] = value 
+
+    def percentage(self, fraction : float) -> str:
+        "Turn float into percentage display string"
+        return str(round(fraction, 4)) + "%"
 
 
 def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
