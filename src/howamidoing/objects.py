@@ -564,7 +564,7 @@ class Course:
         self.corr = corr
         self.name = name if name else "My Course"
         self.status = "Other"
-        self.components = dict() # {id, component_info_dict}
+        self.components : dict[ID, dict] = dict() # {id, component_info_dict}
         self.clobber_info = None
 
         self.uncurved_boundaries = {
@@ -824,23 +824,23 @@ class Course:
 
     def get_detail(self) -> list:
         """
-        Course detail is a list of component summaries.
+        Course detail is a list of component info that includes summaries.
         """
         if len(self.components) == 0:
             raise AssertionError("No components yet!")
 
         detail = []
-        for id, component_info in self.components.items():
-            component_summary = {"id" : id}
-            component_summary.update(component_info) # Merge two dictionary
-            component = component_summary["object"] 
-            component_summary["name"] = component.get_name()
-            del component_summary["object"] # Remove object field
+        for id, old_component_info in self.components.items():
+            component_info = {"id" : id}
+            component_info.update(old_component_info) # Merge two dictionary
+            component : Component = component_info["object"] 
+            component_info["name"] = component.get_name()
+            del component_info["object"] # Remove object field
             try:
-                component_summary["summary"] = component.get_summary()
+                component_info.update(component.get_summary().to_dict()) # Merge summary into info
             except Exception as e:
-                component_summary["summary"] = str(e)
-            detail.append(component_summary)
+                component_info["error_messgae"] = str(e)
+            detail.append(component_info)
 
         # Sort by weight
         detail.sort(key = lambda component_summary: component_summary["weight"], reverse=True)
@@ -1061,25 +1061,25 @@ class Profile():
     
     def get_detail(self) -> list:
         """
-        Profile detail is a list of course summaries.
+        Profile detail is a list of course info that includes summaries.
         """
         if len(self.courses) == 0:
             raise AssertionError("No courses yet! Add your courses now and track your performance.")
 
         detail = []
         for id, course in self.courses.items():
-            course_summary = {"id" : id}
-            course_summary["name"] = course.get_name()
-            course_summary["status"] = course.get_status()
+            course_info = {"id" : id}
+            course_info["name"] = course.get_name()
+            course_info["status"] = course.get_status()
             try:
-                course_summary["summary"] = course.get_summary()
+                course_info.update(course.get_summary().to_dict())
             except Exception as e:
-                course_summary["summary"] = str(e)
-            detail.append(course_summary)
+                course_info["error_message"] = str(e)
+            detail.append(course_info)
 
         # Sort by status
         status_ordering = {"In Progress": 0, "Other": 1, "Completed": 2}
-        detail.sort(key = lambda course_summary: status_ordering[course_summary["status"]])
+        detail.sort(key = lambda course_info: status_ordering[course_info["status"]])
 
         return detail
     

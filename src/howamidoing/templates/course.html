@@ -16,14 +16,14 @@
       <div class="card">
         <a class="main" href="">
           {{ comp_info["name"] }} 
-          {{ comp_info["summary"]["percentage"] }} 
+          {{ comp_info["percentage"] }} 
         </a>
         <div class="buttons">
           <a class="edit" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = comp_info['id']) }}">
-            <i class="fa-solid fa-pen-to-square fa-2xl" style="color: #282828;"></i> 
+            <i class="fa-solid fa-pen-to-square fa-xl" style="color: #282828;"></i> 
           </a>
           <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = comp_info['id']) }}">
-            <i class="fa-solid fa-trash-can fa-2xl" style="color: #282828;"></i> 
+            <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
           </a>
         </div>
       </div>

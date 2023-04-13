@@ -41,6 +41,7 @@ class Summary():
         "is_final" : bool, [Course]
         "class_curved" : bool, [Course]
         "grade" : bool, [Course]
+        "error_messahe" : error message if exist [for all]
     }
     """
 
@@ -64,6 +65,7 @@ class Summary():
         summary["is_final"] = None
         summary["class_curved"] = None
         summary["grade"] = None
+        summary["error_message"] = None
 
         self.summary = summary
 
@@ -85,6 +87,8 @@ class Summary():
         "Turn float into percentage display string"
         return str(round(fraction, 4) * 100) + "%"
 
+    def to_dict(self) -> dict:
+        return self.summary
 
 def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:
     """

@@ -19,16 +19,31 @@
       <div class="card">
         <a class="main" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
           <h1>{{ course['name'] }}</h1>
-          {{ course['status'] }}
-          {{ course['summary']['percentage'] }}
-          {{ course['summary']['class_curved'] }}
+          <div class="info">
+            <div class="info-box">
+              Your percentage: <span class="big">{{ course['percentage'] }}</span> 
+            </div>
+            <hspace></hspace>
+            <div class="info-box">
+              Class average: <span class="small">{{ course['mu'] }}</span>
+              Class standard deviation:  <span class="small">{{ course['sigma'] }}</span>
+            </div>
+            <hspace></hspace>
+            <div class="info-box">
+              Letter grade estimate:  <span class="big">{{ course['grade'] }}</span> 
+            </div>
+            <filler></filler>
+            <div class="status-box">
+              {{ course['status'] }}
+            </div>
+          </div>
         </a>
         <div class="buttons">
           <a class="edit" href="{{ url_for('profile.edit_course', course_id = course['id']) }}">
-            <i class="fa-solid fa-pen-to-square fa-2xl" style="color: #282828;"></i> 
+            <i class="fa-solid fa-pen-to-square fa-xl" style="color: #282828;"></i> 
           </a>
           <a class="delete" href="{{ url_for('profile.delete_course', course_id = course['id']) }}">
-            <i class="fa-solid fa-trash-can fa-2xl" style="color: #282828;"></i> 
+            <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
           </a>
         </div>
         
