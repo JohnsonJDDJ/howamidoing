@@ -29,13 +29,17 @@
     <label>Upper bound score for this assignment</label>
     <input name="upper" value="{{ assignment.upper }}" required>
   </div>
-  <div id="mu" class="label-input-pair">
+  <div id="mu" class="label-input-pair"
+    {% if assignment.curved %} style="display:flex;" {% else %} style="display:none;" {% endif %}
+  >
     <label>Class average for this assignment</label>
-    <input name="mu" value="{{ request.form['mu'] }}">
+    <input name="mu" value="{{ assignment.mu }}">
   </div>
-  <div id="sigma" class="label-input-pair">
+  <div id="sigma" class="label-input-pair"
+    {% if assignment.curved %} style="display:flex;" {% else %} style="display:none;" {% endif %}
+  >
     <label>Class standard deviation for this assignment</label>
-    <input name="sigma" value="{{ request.form['sigma'] }}">
+    <input name="sigma" value="{{ assignment.sigma }}">
   </div>
   <input type="submit" value="Save">
 </form>

@@ -12,29 +12,27 @@
 {% block content %}
   {% if course_details %}
   {{ course_details }}
-    {% for component in course_details %}
+    {% for comp_info in course_details %}
       <div class="card">
         <a class="main" href="">
-          {{ component }}   
+          {{ comp_info["name"] }} 
+          {{ comp_info["summary"]["percentage"] }} 
         </a>
         <div class="buttons">
-          <a class="edit" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = component['id']) }}">
+          <a class="edit" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = comp_info['id']) }}">
             <i class="fa-solid fa-pen-to-square fa-2xl" style="color: #282828;"></i> 
           </a>
-          <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = component['id']) }}">
+          <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = comp_info['id']) }}">
             <i class="fa-solid fa-trash-can fa-2xl" style="color: #282828;"></i> 
           </a>
         </div>
-        
       </div>
-
-    {% if not loop.last %}
-      <hr>
-    {% endif %}
-
+      {% if not loop.last %}
+        <hr>
+      {% endif %}
     {% endfor %} 
-
-  {% else %}
-    No assignments yet. 
+  {% endif %}
+  {% if message %}
+    {{ message }}
   {% endif %}
 {% endblock %}

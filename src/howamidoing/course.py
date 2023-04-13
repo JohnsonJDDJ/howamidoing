@@ -25,10 +25,10 @@ def course_landing(course_id):
     # display course detail
     try:
         course_details = course.get_detail()
-        return render_template('course.html', course = course, course_details = course_details)
+        return render_template('course.html', course = course, course_details = course_details, message = None)
     # no components -> course_details = []
     except Exception as e: 
-        return render_template('course.html', course = course, course_details = [])
+        return render_template('course.html', course = course, course_details = [], message = e)
 
 
 @bp.route('/<int:course_id>/add_single_assignment', methods=['GET', 'POST'])

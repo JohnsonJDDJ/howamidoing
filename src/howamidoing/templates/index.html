@@ -14,11 +14,14 @@
 
 {% block content %}
   {% if profile_details%}
+    {{ profile_details }}
     {% for course in profile_details %}
       <div class="card">
         <a class="main" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
           <h1>{{ course['name'] }}</h1>
-          {{ course['summary'] }}   
+          {{ course['status'] }}
+          {{ course['summary']['percentage'] }}
+          {{ course['summary']['class_curved'] }}
         </a>
         <div class="buttons">
           <a class="edit" href="{{ url_for('profile.edit_course', course_id = course['id']) }}">
