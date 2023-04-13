@@ -1064,7 +1064,7 @@ class Profile():
         Profile detail is a list of course summaries.
         """
         if len(self.courses) == 0:
-            raise AssertionError("No courses yet!")
+            raise AssertionError("No courses yet! Add your courses now and track your performance.")
 
         detail = []
         for id, course in self.courses.items():

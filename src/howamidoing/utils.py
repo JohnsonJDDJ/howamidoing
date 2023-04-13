@@ -83,7 +83,7 @@ class Summary():
 
     def percentage(self, fraction : float) -> str:
         "Turn float into percentage display string"
-        return str(round(fraction, 4)) + "%"
+        return str(round(fraction, 4) * 100) + "%"
 
 
 def correlated_sigma_sum(sigma1: float, sigma2: float, corr: float) -> float:

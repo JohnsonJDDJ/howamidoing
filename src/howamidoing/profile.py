@@ -19,12 +19,12 @@ def index():
     if session.get("user_id") is not None:
         try:
             profile_details = g.profile.get_detail()
-            return render_template('index.html', profile_details = profile_details)
+            return render_template('index.html', profile_details = profile_details, message = None)
         # Logged in but no courses -> profile_details = []
         except Exception as e: 
-            return render_template('index.html', profile_details = [])
+            return render_template('index.html', profile_details = [], message = e)
     # Not Logged in
-    return render_template('index.html', profile_details = [])
+    return render_template('index.html', profile_details = [], message = None)
 
 
 @bp.route('/add_course', methods=('GET', 'POST'))
@@ -85,7 +85,7 @@ def edit_course(course_id):
             # Update the user's profile in the database
             users.update_one(
                 {"_id": g.user["_id"]},
-                {"$set": {"profile": g.profile._to_json()}})
+                {"$set": {"profile": g.profile.to_json()}})
             
             return redirect(url_for('index'))
 

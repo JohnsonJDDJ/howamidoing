@@ -13,7 +13,7 @@
 {% endblock %}
 
 {% block content %}
-  {% if g.user and profile_details%}
+  {% if profile_details%}
     {% for course in profile_details %}
       <div class="card">
         <a class="main" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
@@ -34,7 +34,8 @@
         <hr>
       {% endif %}
     {% endfor %} 
-  {% elif g.user%}
-    No courses yet! Create a course now!
+  {% endif %}
+  {% if message%}
+    {{ message }}
   {% endif %}
 {% endblock %}

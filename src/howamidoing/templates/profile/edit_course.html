@@ -8,19 +8,19 @@
   <form method="post">
     <div id="name" class="label-input-pair">
       <label>Course name</label>
-      <input name="name" value="{{ course['name'] }}" required>
+      <input name="name" value="{{ course.name }}" required>
     </div>
     <div id="status" class="label-input-pair">
       <label>Course status</label>
       <choice>
-        <li><input type="radio" name="status" value="In Progress" {% if course['status'] == "In Progress" %}checked{% endif %}>In Progress</li>
-        <li><input type="radio" name="status" value="Completed" {% if course['status'] == "Completed" %}checked{% endif %}>Completed</li>
-        <li><input type="radio" name="status" value="Other" {% if course['status'] not in ["In Progress", "Completed"] %}checked{% endif %}>Other</li>
+        <li><input type="radio" name="status" value="In Progress" {% if course.status == "In Progress" %}checked{% endif %}>In Progress</li>
+        <li><input type="radio" name="status" value="Completed" {% if course.status == "Completed" %}checked{% endif %}>Completed</li>
+        <li><input type="radio" name="status" value="Other" {% if course.status == "Other" %}checked{% endif %}>Other</li>
       </choice>
     </div>
     <div id="corr" class="label-input-pair">
       <label>Correlation coefficient</label>
-      <input name="corr" value="{{ course['corr'] }}" required>
+      <input name="corr" value="{{ course.corr }}" required>
     </div>
     <input type="submit" value="Save">
   </form>
