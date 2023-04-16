@@ -15,7 +15,7 @@
 {% block content %}
   {% if profile_details%}
     {% for course in profile_details %}
-      <div class="card">
+      <div class="card course">
         <div class="main">
           <div class="header">
             <h1>{{ course['name'] }}</h1>
@@ -40,7 +40,7 @@
             <span class="toggle-letter-grade" type="button">Toggle Letter Grade</span>
             {% endif %}
           </div>
-          <div class="status-box">
+          <div class="meta-box">
             Status: {{ course['status'] }}; Course components: {% if course['is_final'] %}Final{% else %}Not final{% endif %}.
           </div>
         </div>

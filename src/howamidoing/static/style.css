@@ -3,6 +3,7 @@ body { margin: 0 auto; background: white; }
 h1 { color: #282828; margin: 1rem 0; }
 span { color: #282828; }
 .hidden { display: none !important; }
+.bold { font-weight: 600 !important; }
 
 /* Normal link */
 a, a:visited { text-decoration: none; color: #282828;}
@@ -40,11 +41,15 @@ input.danger { color: #cc2f2e; }
 input[type=submit] { align-self: start; min-width: 10em; }
 
 /* CARD */
-.card { margin: 16px 0; height: 240px; width: auto; display: flex; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); font-weight: 200; }
+.card { margin: 16px 0; width: auto; display: flex; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); font-weight: 200; }
+.card.course { height: 240px; } /* Taller for course */
+.card.single-assignment { height: 160px; } /* Shorter for components */
 .card a:hover, .card a:active { background-color: rgb(240, 243, 238); text-decoration: none; }
 
 .card > .main { display: flex; flex-direction: column; flex: auto; border-right: 2px solid rgb(240, 243, 238); }
-.card > .main .header { margin: 0; padding: 16px 16px; border-bottom: 2px solid rgb(240, 243, 238); display: flex;}
+.card .header { margin: 0;border-bottom: 2px solid rgb(240, 243, 238); display: flex;}
+.card.course .header { padding: 16px 16px; }
+.card.single-assignment .header { padding: 8px 16px; }
 .card .header > h1 { margin: 0; flex: auto; }
 
 .card .info { flex: auto; display: flex; }
@@ -60,4 +65,6 @@ input[type=submit] { align-self: start; min-width: 10em; }
 .card .buttons a { flex: auto; display: flex; justify-content: center; align-items: center; }
 .card .buttons i { margin: auto; }
 
-.card .status-box { display: flex; align-items: center; margin-left: 16px; height: 48px;}
+.card .meta-box { display: flex; align-items: center; margin-left: 16px; }
+.card.course .meta-box { height: 48px; }
+.card.single-assignment .meta-box { height: 32px; }
