@@ -38,18 +38,21 @@ nav ul li a, nav ul li span { display: block; padding: 0.5rem; }
 input.danger { color: #cc2f2e; }
 input[type=submit] { align-self: start; min-width: 10em; }
 
-.card { margin: 2rem 0; height: 12rem; width: auto; display: flex; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); }
+/* CARD */
+.card { margin: 16px 0; height: 240px; width: auto; display: flex; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); font-weight: 200; }
 .card a:hover, .card a:active { background-color: rgb(240, 243, 238); text-decoration: none; }
 
 .card .main { display: flex; flex-direction: column; flex: auto; border-right: 2px solid rgb(240, 243, 238); }
-.card .main > h1 { margin: 1rem 1rem; }
+.card .main > h1 { margin: 0; padding: 16px 16px; border-bottom: 2px solid rgb(240, 243, 238); }
 
-.card .info { flex: auto; display: flex;}
+.card .info { flex: auto; display: flex; }
+.info > .message { font-weight: 400; margin: auto 20px; }
 .info > .info-box { display: flex; flex-direction: column; margin: auto 20px;}
-.info-box > .big { font-size: 60px; }
-.info-box > .small { font-size: 25px; }
-.info > .status-box { margin: auto 2em 0 2em; padding: 0.5em 1em; }
+.info-box > .big { font-size: 60px; font-weight: 600; }
+.info-box > .small { font-size: 25px; font-weight: 400; }
 
-.card .buttons { display: flex; flex-direction: column; width: 3em; }
-.card .buttons a { display: flex; justify-content: center; align-items: center; width: 3em; height: 6em; }
+.card .buttons { display: flex; flex-direction: column; width: 48px; }
+.card .buttons a { flex: auto; display: flex; justify-content: center; align-items: center; }
 .card .buttons i { margin: auto; }
+
+.card .status-box { display: flex; align-items: center; margin-left: 16px; height: 48px;}

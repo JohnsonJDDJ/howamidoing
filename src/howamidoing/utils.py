@@ -85,7 +85,7 @@ class Summary():
 
     def percentage(self, fraction : float) -> str:
         "Turn float into percentage display string"
-        return str(round(fraction, 4) * 100) + "%"
+        return str(round(fraction * 100, 2) ) + "%"
 
     def to_dict(self) -> dict:
         return self.summary

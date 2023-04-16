@@ -14,28 +14,33 @@
 
 {% block content %}
   {% if profile_details%}
-    {{ profile_details }}
     {% for course in profile_details %}
       <div class="card">
         <a class="main" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
           <h1>{{ course['name'] }}</h1>
           <div class="info">
+            {% if course["error_message"] %}
+              <div class="message">
+                {{ course["error_message"] }}
+              </div>
+            {% else %}
             <div class="info-box">
               Your percentage: <span class="big">{{ course['percentage'] }}</span> 
+            </div>
+            <hspace></hspace>
+            <div class="info-box">
+              Letter grade estimate:  <span class="big">{{ course['grade'] }}</span> 
             </div>
             <hspace></hspace>
             <div class="info-box">
               Class average: <span class="small">{{ course['mu'] }}</span>
               Class standard deviation:  <span class="small">{{ course['sigma'] }}</span>
             </div>
-            <hspace></hspace>
-            <div class="info-box">
-              Letter grade estimate:  <span class="big">{{ course['grade'] }}</span> 
-            </div>
+            {% endif %}
             <filler></filler>
-            <div class="status-box">
-              {{ course['status'] }}
-            </div>
+          </div>
+          <div class="status-box">
+            {{ course['status'] }}
           </div>
         </a>
         <div class="buttons">

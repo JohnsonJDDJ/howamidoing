@@ -796,7 +796,7 @@ class Course:
         """
         # Error checking
         if len(self.components) == 0:
-            raise AssertionError("No assignments in this course.")
+            raise AssertionError("No components in this course. Click me to enter and add new components")
     
         # Iterate over components:
         # Classify into curved and uncurved.
