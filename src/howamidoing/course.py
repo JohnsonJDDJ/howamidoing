@@ -6,7 +6,7 @@ from howamidoing.auth import login_required
 from howamidoing.db import get_db
 from howamidoing.objects import Profile, Course
 from howamidoing.app_utils import (
-    fetch_course, fetch_component, create_single_assignment_from_form
+    fetch_course, fetch_component, create_single_assignment_from_form, create_assignment_group_from_form
 )
 
 bp = Blueprint('course', __name__, url_prefix='/course')
@@ -127,3 +127,36 @@ def delete_component(course_id, component_id):
 
     # Return a redirect to the profile page
     return redirect(url_for('course.course_landing', course_id = course_id))
+
+
+@bp.route('/<int:course_id>/add_assignment_group', methods=['GET', 'POST'])
+@login_required
+def add_assignment_group(course_id):
+    # check if this course belongs to the logged in user
+    course = fetch_course(course_id)
+    if course is None:
+        return render_template('error.html', 
+            message = 'You do not have permission to access this course.'
+        ), 403
+    
+    if request.method == 'POST':
+        # Get db
+        users = get_db().users
+
+        # Create the assignment from form
+        error = create_assignment_group_from_form(course, request.form)
+
+        # Flash error
+        if error is not None:
+            flash(error)
+
+        # update the database if no error
+        else:
+            # Update the user's profile in the database
+            users.update_one(
+                {"_id": g.user["_id"]},
+                {"$set": {"profile": g.profile.to_json()}})
+            
+            return redirect(url_for('course.course_landing', course_id = course_id))
+
+    return render_template('course/add_assignment_group.html')

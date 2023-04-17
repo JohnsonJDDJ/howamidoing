@@ -839,7 +839,7 @@ class Course:
             try:
                 component_info.update(component.get_summary().to_dict()) # Merge summary into info
             except Exception as e:
-                component_info["error_messgae"] = str(e)
+                component_info["error_message"] = str(e)
             detail.append(component_info)
 
         # Sort by weight

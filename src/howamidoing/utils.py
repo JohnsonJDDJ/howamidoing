@@ -41,7 +41,7 @@ class Summary():
         "is_final" : bool, [Course]
         "class_curved" : bool, [Course]
         "grade" : bool, [Course]
-        "error_messahe" : error message if exist [for all]
+        "error_message" : error message if exist [for all]
     }
     """
 

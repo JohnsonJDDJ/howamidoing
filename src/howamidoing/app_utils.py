@@ -126,6 +126,44 @@ def validate_single_curved_assignment(form: dict):
     return True, None
 
 
+def validate_assignment_group(form: dict):
+    """
+    Validate assignment group.
+    Name, weight, corr and num_drops should all have non empty
+    values handled by html5.
+    """
+    # Error messages
+    invalid_weight_message = "Weight of this assignment group should be a number between 0 and 1."
+    invalid_corr_message = "Correlation coefficient must be a number between 0 and 1."
+    invalid_num_drops_message = "The number of drops should be an integer greater or equal to 0."
+
+    # Validate weight
+    try:
+        weight = float(form['weight'])
+        if weight > 1 or weight < 0:
+            return False, invalid_weight_message
+    except ValueError:
+        return False, invalid_weight_message
+    
+    # Validate corr
+    try:
+        corr = float(form['corr'])
+        if corr < 0 or corr > 1:
+            return False, invalid_corr_message
+    except ValueError:
+        return False, invalid_corr_message
+
+    # Validate num_drops
+    try:
+        num_drops = int(form['num_drops'])
+        if num_drops < 0:
+            return False, invalid_num_drops_message
+    except ValueError:
+        return False, invalid_num_drops_message
+    
+    return True, None
+
+
 def create_single_assignment_from_form(
         course: Course, 
         form: dict, 
@@ -190,5 +228,71 @@ def create_single_assignment_from_form(
         if component_id is not None:
             course.remove_component(component_id)
         course.add_uncurved_single(weight, score, name, upper, override_id=component_id)
+
+    return None
+
+
+def create_assignment_group_from_form(
+        course: Course, 
+        form: dict, 
+        component_id: ID = None
+    ):
+    """
+    Add the assignment group from the request form to 
+    user's profile. 
+    
+    If ``component_id`` is specified, then
+    remove any component in the course with the same
+    id, create a new assignment group object and explicitly
+    set the id for the newly created object.
+
+    Else, create a new assignment group object with its generic
+    id. 
+    """
+    # Make sure component_id is ID
+    if component_id is not None:
+        component_id = ID(component_id)
+
+    # Added group is curved
+    if form['curved'] == "Curved":
+        
+        # Validate form
+        is_valid, error = validate_assignment_group(form)
+
+        # Return error if not valid
+        if not is_valid:
+            return error
+
+        # Fetch data from form and update profile
+        name = form["name"]
+        weight = float(form["weight"])
+        corr = float(form["corr"])
+        num_drops = int(form["num_drops"])
+
+        # Add the group to user's profile
+        if component_id is not None:
+            course.remove_component(component_id)
+        course.add_curved_group(weight, name, corr, num_drops)
+
+    # Added assignment is uncurved
+    elif form['curved'] == "Not Curved":
+
+        # Validate form
+        is_valid, error = validate_assignment_group(form)
+
+        # Return error if not valid
+        if not is_valid:
+            return error
+
+        # Fetch data from form and update profile
+        name = form["name"]
+        weight = float(form["weight"])
+        corr = float(form["corr"])
+        num_drops = int(form["num_drops"])
+
+         # Add the assignment to user's profile
+        if component_id is not None:
+            course.remove_component(component_id)
+        course.add_uncurved_group(weight, name, corr, num_drops)
 
     return None
