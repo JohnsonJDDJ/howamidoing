@@ -476,14 +476,15 @@ class CurvedAssignmentGroup(AssignmentGroup):
         calculate zscore.
         """
         final_mu, final_sigma, final_score = 0, 0, 0
+        n = len(assignments)
 
         for assignment in assignments:
             summary = assignment.get_summary()
-            final_score += summary["_percentage"]
-            final_mu += summary["_mu"]
+            final_score += summary["_percentage"] / n
+            final_mu += summary["_mu"] / n
             final_sigma = correlated_sigma_sum(
                 final_sigma,
-                summary["_sigma"],
+                summary["_sigma"] / n,
                 self.corr
             )
 

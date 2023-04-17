@@ -9,7 +9,7 @@
   <h1 class="light"><a href="{{ url_for('course.course_landing', course_id = course.get_id()) }}">{{ course.get_name() }}</a>&nbsp;&nbsp;>&nbsp;&nbsp;</h1>
   <h1>{{ group.get_name() }}</h1>
   <filler></filler>
-  <a class="action" href="{{ url_for('course.add_single_assignment', course_id = course.get_id()) }}">Add Assignment</a>
+  <a class="action" href="{{ url_for('course.add_group_assignment', course_id = course.get_id(), group_id = group.get_id()) }}">Add Assignment</a>
 {% endblock %}
 
 {% block content %}
