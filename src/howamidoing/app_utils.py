@@ -1,6 +1,6 @@
 from flask import g
 from howamidoing.objects import (
-    Course, Profile, Component, UncurvedAssignmentGroup, CurvedAssignmentGroup
+    Course, Profile, Component, UncurvedAssignmentGroup, CurvedAssignmentGroup, Assignment
 )
 from howamidoing.utils import ID
 from typing import Union
@@ -30,6 +30,7 @@ def fetch_component(
     Check if this component belongs to the course. It does not
     check whether the course belongs to the logged in user so
     always run fetch_course() before running fetch_component().
+
     Return None if check failed, else return the component
     object.
     """
@@ -42,7 +43,29 @@ def fetch_component(
         return None
     else:
         return components_info[component_id]["object"]
+    
 
+def fetch_grouped_assignment(
+        group : Union[UncurvedAssignmentGroup, CurvedAssignmentGroup],
+        assignment_id: ID
+    ) -> Assignment:
+    """
+    Check if the assignment belong to the group. It does not
+    check whether the group belongs to the logged in user so
+    always run fetch_course() AND fetch_component() before running 
+    fetch_component().
+
+    Return None if check failed, else return the component
+    object.
+    """
+    # Make sure component_id is ID
+    assignment_id = ID(assignment_id)
+
+    if assignment_id not in group.get_assignments():
+        return None
+    else:
+        return group.get_assignments()[assignment_id]
+    
 
 def validate_course(form):
     """
