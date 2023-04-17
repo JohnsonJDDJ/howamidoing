@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {{ group.get_name() }}
+{% endblock %}
+
+{% block header %}
+  <h1 class="light"><a href="{{ url_for('index') }}">My Profile</a>&nbsp;&nbsp;>&nbsp;&nbsp;</h1>
+  <h1 class="light"><a href="{{ url_for('course.course_landing', course_id = course.get_id()) }}">{{ course.get_name() }}</a>&nbsp;&nbsp;>&nbsp;&nbsp;</h1>
+  <h1>{{ group.get_name() }}</h1>
+  <filler></filler>
+  <a class="action" href="{{ url_for('course.add_single_assignment', course_id = course.get_id()) }}">Add Assignment</a>
+{% endblock %}
+
+{% block content %}
+  {% if group_details %}
+    {{ group_details }}
+    {% for assignment in group_details %}
+      <div class="card components">
+        <div class="main">
+          <div class="header">
+            <h1>{{ assignment['name'] }}</h1>
+          </div>
+          {% if assignment["error_message"] %}
+          <div class="info">
+            <div class="message">
+              {{ assignment["error_message"] }}
+            </div>
+          </div>
+          {% else %}
+          <div class="info">
+            <div class="info-box">
+              Your percentage: <span class="small bold">{{ assignment['percentage'] }}</span> 
+            </div>
+            <div class="info-box">
+              Class average: <span class="small">{{ assignment['mu'] }}</span>
+            </div>
+            <div class="info-box">
+              Class standard deviation:  <span class="small">{{ assignment['sigma'] }}</span>
+            </div>
+            <filler></filler>
+            <div class="toggle-box">
+              <span class="toggle" id="toggle-meta" type="button">Toggle meta</span>
+            </div>
+          </div>
+          <div class="meta-box">
+            Meta
+            <span class="hidden" id="meta">
+              Hidden meta
+            </span>
+          </div>
+          {% endif %}
+        </div>
+        <div class="buttons">
+          <a class="edit" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = assignment['id']) }}">
+            <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
+          </a>
+          <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = assignment['id']) }}">
+            <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
+          </a>
+        </div>
+      </div>
+      {% if not loop.last %}
+        <hr>
+      {% endif %}
+    {% endfor %} 
+  {% endif %}
+  {% if message %}
+    {{ message }}
+  {% endif %}
+  <script>
+     // Get all the toggle-meta button elements
+     var toggleMeta = document.querySelectorAll("#toggle-meta");
+
+    // Loop through each button and add a click event listener
+    for (var i = 0; i < toggleMeta.length; i++) {
+      toggleMeta[i].addEventListener("click", function() {
+      console.log("Meta Button clicked!");
+      // Get the info-box element with class="meta-box" that is a sibling of grandparent of the clicked button
+      var metaBoxElement = this.parentNode.parentNode.parentNode.querySelector(".meta-box");
+      // Get the span with id=meta
+      var metaElement = metaBoxElement.querySelector("#meta")
+      console.log("metaElement:", metaElement);
+
+      // Toggle the "hidden" CSS class on the metaElement
+      metaElement.classList.toggle("hidden");
+      console.log("metaElement classList:", metaElement.classList);
+      });
+    }
+  </script>
+{% endblock %}
