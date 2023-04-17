@@ -301,8 +301,9 @@ class AssignmentGroup:
         self.weight = weight
         self.name = name
         self.corr = corr
+        self.curved = None
         self.num_drops = num_drops
-        self.assignments = dict() # {id : Assignment}
+        self.assignments : dict[ID, Assignment] = {} # {id : Assignment}
 
 
     def __repr__(self) -> str:
@@ -321,6 +322,7 @@ class AssignmentGroup:
             "name" : self.name,
             "weight" : self.weight,
             "corr" : self.corr,
+            "curved" : self.curved,
             "num_drops" : self.num_drops,
             "assignments" : assignments,
             "class" : "AssignmentGroup"
@@ -335,6 +337,7 @@ class AssignmentGroup:
         self.name = json["name"]
         self.weight = json["weight"]
         self.corr = json["corr"]
+        self.curved = json["curved"]
         self.num_drops = json["num_drops"]
         self.assignments = {}
 
@@ -355,6 +358,7 @@ class AssignmentGroup:
     def get_name(self) -> str:
         return self.name
     
+
     def get_assignments(self) -> dict[ID, Assignment]:
         return self.assignments
 
@@ -396,6 +400,35 @@ class AssignmentGroup:
         summary["drop_applied"] = drop_applied
 
         return summary
+    
+
+    def get_detail(self) -> list:
+        """
+        AssignmentGroup detial is a list of assignment summaries
+        """
+        if len(self.assignments) == 0: raise AssertionError("No assignments in this group.")
+
+        detail = []
+        for id, assignment in self.get_assignments().items():
+            summary = {"id" : id}
+            summary["name"] = assignment.get_name()
+            try:
+                summary.update(assignment.get_summary().to_dict()) # Merge summary into info
+            except Exception as e:
+                summary["error_message"] = str(e)
+            detail.append(summary)
+
+        return detail
+    
+
+    def remove_assignment(self, assignment_id : ID) -> None:
+        """
+        Remove assignment with ID of ``assignment_id``.
+        If such component does not exist, no-op.
+        """
+        if assignment_id in self.assignments:
+            del self.assignments[assignment_id]
+
 
 
 class CurvedAssignmentGroup(AssignmentGroup):
@@ -415,6 +448,7 @@ class CurvedAssignmentGroup(AssignmentGroup):
         override_json: dict = None
     ) -> None:
         super().__init__(weight, name, corr, num_drops, override_id, override_json)
+        self.curved = True
 
 
     def _to_json(self) -> dict:
@@ -483,6 +517,7 @@ class UncurvedAssignmentGroup(AssignmentGroup):
         override_json: dict = None
     ) -> None:
         super().__init__(weight, name, corr, num_drops, override_id, override_json)
+        self.curved = False
 
 
     def _to_json(self) -> dict:

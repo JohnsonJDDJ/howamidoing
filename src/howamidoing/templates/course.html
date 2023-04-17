@@ -58,7 +58,7 @@
         </div>
         <div class="buttons">
           {% if comp_info["grouped"] %}
-          <a class="open" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = comp_info['id']) }}">
+          <a class="open" href="{{ url_for('course.group_landing', course_id = course.get_id(), group_id = comp_info['id']) }}">
             <i class="fa-solid fa-folder-open fa-xl" style="color: #282828;"></i> 
           </a>
           <a class="edit" href="{{ url_for('course.edit_assignment_group', course_id = course.get_id(), component_id = comp_info['id']) }}">

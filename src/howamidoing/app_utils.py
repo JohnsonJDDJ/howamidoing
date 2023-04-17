@@ -1,8 +1,9 @@
 from flask import g
 from howamidoing.objects import (
-    Course, Profile, Component
+    Course, Profile, Component, UncurvedAssignmentGroup, CurvedAssignmentGroup
 )
 from howamidoing.utils import ID
+from typing import Union
 
 
 def fetch_course(course_id : ID) -> Course:
@@ -20,7 +21,11 @@ def fetch_course(course_id : ID) -> Course:
         return profile.get_courses()[course_id]
     
     
-def fetch_component(course : Course, component_id : ID) -> Component:
+def fetch_component(
+        course : Course, 
+        component_id : ID, 
+        group_only : bool = False
+        ) -> Component:
     """
     Check if this component belongs to the course. It does not
     check whether the course belongs to the logged in user so
@@ -32,6 +37,8 @@ def fetch_component(course : Course, component_id : ID) -> Component:
     component_id = ID(component_id)
     components_info = course.get_components()
     if component_id not in components_info:
+        return None
+    elif group_only and not components_info[component_id]["grouped"]:
         return None
     else:
         return components_info[component_id]["object"]
@@ -55,9 +62,9 @@ def validate_course(form):
     return True, None
 
 
-def validate_single_uncurved_assignment(form: dict):
+def validate_single_assignment(form: dict, curved: bool):
     """
-    Validate single uncurved assignment.
+    Validate single assignment, both curved and uncurved.
     Name, weight, score and upper should all have non empty
     values handled by html5.
     """
@@ -65,6 +72,10 @@ def validate_single_uncurved_assignment(form: dict):
     invalid_weight_message = "Weight of assignment should be a number between 0 and 1."
     invalid_score_message = "Score of assignment should be a number."
     invalid_upper_message = "Upper bound of assignment should be a number."
+    missing_mu_message = "You must enter a class average for a curved assignment. Grade estimations for curved classes depend on class average data."
+    invalid_mu_message = "Class average of assignment should be a number"
+    missing_sigma_message = "You must enter a class standard deviation for a curved assignment. Grade estimations for curved classes depend on class standard deviation data."
+    invalid_sigma_message = "Class standard deviation of assignment should be a number."
 
     # Validate weight
     try:
@@ -85,44 +96,24 @@ def validate_single_uncurved_assignment(form: dict):
         float(form['upper'])
     except ValueError:
         return False, invalid_upper_message
-
-    return True, None
-
-
-def validate_single_curved_assignment(form: dict):
-    """
-    Validate single curved assignment.
-    Name, weight, score and upper should all have non empty
-    values handled by html5.
-    """
-    # Validate fields that are also checked for
-    # uncurved assignment
-    is_valid, error = validate_single_uncurved_assignment(form)
-    if not is_valid:
-        return False, error
     
-    # Error messages
-    missing_mu_message = "You must enter a class average for a curved assignment. Grade estimations for curved classes depend on class average data."
-    invalid_mu_message = "Class average of assignment should be a number"
-    missing_sigma_message = "You must enter a class standard deviation for a curved assignment. Grade estimations for curved classes depend on class standard deviation data."
-    invalid_sigma_message = "Class standard deviation of assignment should be a number."
+    if curved:
+        # Validate mu
+        if form["mu"] is None:
+            return False, missing_mu_message
+        try:
+            float(form['mu'])
+        except ValueError:
+            return False, invalid_mu_message
+        
+        # Validate sigma
+        if form["sigma"] is None:
+            return False, missing_sigma_message
+        try:
+            float(form['sigma'])
+        except ValueError:
+            return False, invalid_sigma_message
 
-    # Validate mu
-    if form["mu"] is None:
-        return False, missing_mu_message
-    try:
-        float(form['mu'])
-    except ValueError:
-        return False, invalid_mu_message
-    
-    # Validate sigma
-    if form["sigma"] is None:
-        return False, missing_sigma_message
-    try:
-        float(form['sigma'])
-    except ValueError:
-        return False, invalid_sigma_message
-    
     return True, None
 
 
@@ -164,6 +155,52 @@ def validate_assignment_group(form: dict):
     return True, None
 
 
+def validate_group_assignment(form: dict, curved: bool):
+    """
+    Validate assignment within a group.
+    Name, score, upper (possibly mu, sigma) should all have non empty
+    values handled by html5.
+    """
+    # Error messages
+    invalid_score_message = "Score of assignment should be a number."
+    invalid_upper_message = "Upper bound of assignment should be a number."
+    missing_mu_message = "You must enter a class average for a curved assignment. Grade estimations for curved classes depend on class average data."
+    invalid_mu_message = "Class average of assignment should be a number"
+    missing_sigma_message = "You must enter a class standard deviation for a curved assignment. Grade estimations for curved classes depend on class standard deviation data."
+    invalid_sigma_message = "Class standard deviation of assignment should be a number."
+
+    # Validate score
+    try:
+        float(form['score'])
+    except ValueError:
+        return False, invalid_score_message
+
+    # Validate upper
+    try:
+        float(form['upper'])
+    except ValueError:
+        return False, invalid_upper_message
+    
+    if curved:
+        # Validate mu
+        if form["mu"] is None:
+            return False, missing_mu_message
+        try:
+            float(form['mu'])
+        except ValueError:
+            return False, invalid_mu_message
+        
+        # Validate sigma
+        if form["sigma"] is None:
+            return False, missing_sigma_message
+        try:
+            float(form['sigma'])
+        except ValueError:
+            return False, invalid_sigma_message
+
+    return True, None
+
+
 def create_single_assignment_from_form(
         course: Course, 
         form: dict, 
@@ -184,49 +221,32 @@ def create_single_assignment_from_form(
     # Make sure component_id is ID
     if component_id is not None:
         component_id = ID(component_id)
-
-    # Added assignment is curved
-    if form['curved'] == "Curved":
         
-        # Validate form
-        is_valid, error = validate_single_curved_assignment(form)
+    # Validate form
+    curved = form['curved'] == "Curved"
+    is_valid, error = validate_single_assignment(form, curved=curved)
 
-        # Return error if not valid
-        if not is_valid:
-            return error
+    # Return error if not valid
+    if not is_valid:
+        return error
 
-        # Fetch data from form and update profile
-        name = form["name"]
-        weight = float(form["weight"])
-        score = float(form["score"])
-        upper = float(form["upper"])
+    # Fetch data from form and update profile
+    name = form["name"]
+    weight = float(form["weight"])
+    score = float(form["score"])
+    upper = float(form["upper"])
+    if curved:
         mu = float(form["mu"])
         sigma = float(form["sigma"])
 
-        # Add the assignment to user's profile
-        if component_id is not None:
-            course.remove_component(component_id)
+    # Remove existing assignment if specified
+    if component_id is not None:
+        course.remove_component(component_id)
+    
+    # Add the assignment to user's profile
+    if curved:
         course.add_curved_single(weight, score, name, upper, mu, sigma, override_id=component_id)
-
-    # Added assignment is uncurved
-    elif form['curved'] == "Not Curved":
-
-        # Validate form
-        is_valid, error = validate_single_uncurved_assignment(form)
-
-        # Return error if not valid
-        if not is_valid:
-            return error
-
-        # Fetch data from form and update profile
-        name = form["name"]
-        weight = float(form["weight"])
-        score = float(form["score"])
-        upper = float(form["upper"])
-
-         # Add the assignment to user's profile
-        if component_id is not None:
-            course.remove_component(component_id)
+    else:
         course.add_uncurved_single(weight, score, name, upper, override_id=component_id)
 
     return None
@@ -272,7 +292,7 @@ def create_assignment_group_from_form(
         # Add the group to user's profile
         if component_id is not None:
             course.remove_component(component_id)
-        course.add_curved_group(weight, name, corr, num_drops)
+        course.add_curved_group(weight, name, corr, num_drops, override_id=component_id)
 
     # Added assignment is uncurved
     elif form['curved'] == "Not Curved":
@@ -293,6 +313,57 @@ def create_assignment_group_from_form(
          # Add the assignment to user's profile
         if component_id is not None:
             course.remove_component(component_id)
-        course.add_uncurved_group(weight, name, corr, num_drops)
+        course.add_uncurved_group(weight, name, corr, num_drops, override_id=component_id)
+
+    return None
+
+
+def create_group_assignment_from_form(
+        group : Union[UncurvedAssignmentGroup, CurvedAssignmentGroup],
+        form : dict,
+        assignment_id : ID = None
+    ):
+    """
+    Add the assignment from the request form to the
+    assignment group and to the user's profile
+    
+    If ``assignment_id`` is specified, then
+    remove any assignment in the course with the same
+    id, create a new assignment object and explicitly
+    set the id for the newly created object.
+
+    Else, create a new assignment object with its generic
+    id. 
+    """
+    # Make sure assignment_id is ID
+    if assignment_id is not None:
+        assignment_id = ID(assignment_id)
+ 
+    # Validate form
+    is_valid, error = validate_group_assignment(form, curved = group.curved)
+
+    # Return error if not valid
+    if not is_valid:
+        return error
+
+    # Fetch data from form and update profile
+    name = form["name"]
+    score = float(form["score"])
+    upper = float(form["upper"])
+
+    # Also fetch class stats for curved group
+    if group.curved:
+        mu = float(form["mu"])
+        sigma = float(form["sigma"])
+
+    # Remove existing assignment if specified
+    if assignment_id is not None:
+        group.remove_assignment(assignment_id)
+
+    # Add the assignment to user's profile
+    if group.curved:
+        group.add_assignment(score, name, upper, mu, sigma, override_id=assignment_id)
+    else:
+        group.add_assignment(score, name, upper, override_id=assignment_id)
 
     return None
