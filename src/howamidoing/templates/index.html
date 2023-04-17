@@ -20,13 +20,16 @@
         <div class="main">
           <div class="header">
             <h1>{{ course['name'] }}</h1>
+            <filler></filler>
           </div>
+          {% if course["error_message"] %}
           <div class="info">
-            {% if course["error_message"] %}
-              <div class="message">
-                {{ course["error_message"] }}
-              </div>
-            {% else %}
+            <div class="message">
+              {{ course["error_message"] }}
+            </div>
+          </div>
+          {% else %}
+          <div class="info">
             <div class="info-box">
               Your percentage: <span class="big">{{ course['percentage'] }}</span> 
             </div>
@@ -38,12 +41,19 @@
               Class standard deviation:  <span class="small">{{ course['sigma'] }}</span>
             </div>
             <filler></filler>
-            <span class="toggle-letter-grade" type="button">Toggle Letter Grade</span>
-            {% endif %}
+            <div class="toggle-box">
+              <span class="toggle" id="toggle-letter-grade" type="button">Toggle letter grade</span>
+              <span class="toggle" id="toggle-meta" type="button">Toggle meta</span>
+            </div>
           </div>
           <div class="meta-box">
-            Status: {{ course['status'] }}; Course components: {% if course['is_final'] %}Final{% else %}Not final{% endif %}.
+            Status: {{ course['status'] }}
+            <span class="hidden" id="meta">
+              ; Course components: {% if course['is_final'] %}Final{% else %}Not final{% endif %};
+              Course Type: {% if course['class_curved'] %}Curved course{% else %}Uncurved course{% endif %}
+            </span>
           </div>
+          {% endif %}
         </div>
         <div class="buttons">
           <a class="enter" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
@@ -68,19 +78,38 @@
   {% endif %}
   <script>
     // Get all the toggle-letter-grade button elements
-    var toggleButtons = document.querySelectorAll(".toggle-letter-grade");
+    var toggleLetterGrade = document.querySelectorAll("#toggle-letter-grade");
 
     // Loop through each button and add a click event listener
-    for (var i = 0; i < toggleButtons.length; i++) {
-      toggleButtons[i].addEventListener("click", function() {
+    for (var i = 0; i < toggleLetterGrade.length; i++) {
+      toggleLetterGrade[i].addEventListener("click", function() {
       console.log("Button clicked!");
-      // Get the info-box element with id="letter-grade" that is a sibling of the clicked button
-      var letterGradeElement = this.parentNode.querySelector(".info-box#letter-grade");
+      // Get the info-box element with id="letter-grade" that is a sibling of parent of the clicked button
+      var letterGradeElement = this.parentNode.parentNode.querySelector(".info-box#letter-grade");
       console.log("letterGradeElement:", letterGradeElement);
   
       // Toggle the "hidden" CSS class on the letterGradeElement
       letterGradeElement.classList.toggle("hidden");
       console.log("letterGradeElement classList:", letterGradeElement.classList);
+      });
+    }
+
+     // Get all the toggle-meta button elements
+     var toggleMeta = document.querySelectorAll("#toggle-meta");
+
+    // Loop through each button and add a click event listener
+    for (var i = 0; i < toggleMeta.length; i++) {
+      toggleMeta[i].addEventListener("click", function() {
+      console.log("Meta Button clicked!");
+      // Get the info-box element with class="meta-box" that is a sibling of grandparent of the clicked button
+      var metaBoxElement = this.parentNode.parentNode.parentNode.querySelector(".meta-box");
+      // Get the span with id=meta
+      var metaElement = metaBoxElement.querySelector("#meta")
+      console.log("metaElement:", metaElement);
+
+      // Toggle the "hidden" CSS class on the metaElement
+      metaElement.classList.toggle("hidden");
+      console.log("metaElement classList:", metaElement.classList);
       });
     }
   </script>

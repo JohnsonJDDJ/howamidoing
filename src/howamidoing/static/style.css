@@ -4,6 +4,7 @@ h1 { color: #282828; margin: 1rem 0; }
 span { color: #282828; }
 .hidden { display: none !important; }
 .bold { font-weight: 600 !important; }
+.normal {font-weight: 400 !important; }
 .light { font-weight: 200 !important; }
 .underline { text-decoration: underline; }
 
@@ -49,24 +50,26 @@ input[type=submit] { align-self: start; min-width: 10em; }
 .card a:hover, .card a:active { background-color: rgb(240, 243, 238); text-decoration: none; }
 
 .card > .main { display: flex; flex-direction: column; flex: auto; border-right: 2px solid rgb(240, 243, 238); }
-.card .header { margin: 0;border-bottom: 2px solid rgb(240, 243, 238); display: flex;}
+.card .header { margin: 0; border-bottom: 2px solid rgb(240, 243, 238); display: flex; align-items: center;}
 .card.course .header { padding: 16px 16px; }
 .card.single-assignment .header { padding: 8px 16px; }
-.card .header > h1 { margin: 0; flex: auto; }
+.card .header > h1 { margin: 0; }
 
 .card .info { flex: auto; display: flex; }
 .info > .message { font-weight: 400; margin: auto 20px; }
 .info > .info-box { display: flex; flex-direction: column; margin: auto 20px;}
 .info-box > .big { font-size: 60px; font-weight: 600; }
 .info-box > .small { font-size: 25px; font-weight: 400; }
-.info .toggle-letter-grade { display: flex; cursor: pointer; height: 32px; padding: 16px; justify-content: center; align-items: center; }
-.info .toggle-letter-grade:hover {background-color: rgb(240, 243, 238); text-decoration: underline;}
+
+.info > .toggle-box { display: flex; flex-direction: column; margin: 0;}
+.info .toggle { display: flex; cursor: pointer; height: 32px; padding: 12px; justify-content: center; align-items: center; }
+.info .toggle:hover {background-color: rgb(240, 243, 238); text-decoration: underline;}
 
 
 .card .buttons { display: flex; flex-direction: column; width: 48px; }
 .card .buttons a { flex: auto; display: flex; justify-content: center; align-items: center; }
 .card .buttons i { margin: auto; }
 
-.card .meta-box { display: flex; align-items: center; margin-left: 16px; }
+.card .meta-box { display: flex; align-items: center; margin-left: 16px; font-weight: 400; font-style: italic; }
 .card.course .meta-box { height: 48px; }
 .card.single-assignment .meta-box { height: 32px; }

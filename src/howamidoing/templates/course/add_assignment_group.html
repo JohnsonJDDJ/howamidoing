@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}New Assignment Group{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+  <div id = "name" class="label-input-pair">
+    <label>Assignment group name</label>
+    <input name="name" value="{{ request.form['name'] }}" required>
+  </div>
+  <div id="weight" class="label-input-pair">
+    <label>Assignment group weight</label>
+    <input name="weight" value="{{ request.form['weight'] }}" required>
+  </div>
+  <div id="curved" class="label-input-pair">
+    <label>Assignment group type</label>
+    <choice id="curved-choice">
+      <li><input type="radio" name="curved" value="Curved" checked>Curved</li>
+      <li><input type="radio" name="curved" value="Not Curved">Not Curved</li>
+    </choice>
+  </div>
+  <input type="submit" value="Save">
+</form>
+{% endblock %}
