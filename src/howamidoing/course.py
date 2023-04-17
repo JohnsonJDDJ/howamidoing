@@ -78,7 +78,7 @@ def edit_single_assignment(course_id, component_id):
     assignment = fetch_component(course, component_id)
     if assignment is None:
         return render_template('error.html', 
-            message = f'Assignment not found with given id: {component_id}.'
+            message = f'Component not found with given id: {component_id}.'
         ), 404
 
     if request.method == 'POST':
@@ -102,31 +102,6 @@ def edit_single_assignment(course_id, component_id):
             return redirect(url_for('course.course_landing', course_id = course_id))
 
     return render_template('course/edit_single_assignment.html', assignment = assignment)
-
-
-@bp.route('/<int:course_id>/delete/<int:component_id>', methods=['GET'])
-@login_required
-def delete_component(course_id, component_id):
-    # check if this course belongs to the logged in user
-    course = fetch_course(course_id)
-    if course is None:
-        return render_template('error.html', 
-            message = 'You do not have permission to access this course.'
-        ), 403
-    
-    users = get_db().users
-
-    # Remove the course with the given ID from the user's profile
-    course.remove_component(str(component_id))
-
-    # Update the user's profile in the database
-    users.update_one(
-        {'_id': g.user['_id']},
-        {'$set': {'profile': g.profile.to_json()}}
-    )
-
-    # Return a redirect to the profile page
-    return redirect(url_for('course.course_landing', course_id = course_id))
 
 
 @bp.route('/<int:course_id>/add_assignment_group', methods=['GET', 'POST'])
@@ -160,3 +135,69 @@ def add_assignment_group(course_id):
             return redirect(url_for('course.course_landing', course_id = course_id))
 
     return render_template('course/add_assignment_group.html')
+
+
+@bp.route('/<int:course_id>/edit_assignment_group/<int:component_id>', methods=['GET', 'POST'])
+@login_required
+def edit_assignment_group(course_id, component_id):
+    # check if this course belongs to the logged in user
+    course = fetch_course(course_id)
+    if course is None:
+        return render_template('error.html', 
+            message = 'You do not have permission to access this course.'
+        ), 403
+    
+    # check if this component exist
+    assignment_group = fetch_component(course, component_id)
+    if assignment_group is None:
+        return render_template('error.html', 
+            message = f'Component not found with given id: {component_id}.'
+        ), 404
+
+    if request.method == 'POST':
+        # Get db
+        users = get_db().users
+
+        # Create the assignment from form
+        error = create_assignment_group_from_form(course, request.form, component_id=component_id)
+
+        # Flash error
+        if error is not None:
+            flash(error)
+
+        # update the database if no error
+        else:
+            # Update the user's profile in the database
+            users.update_one(
+                {"_id": g.user["_id"]},
+                {"$set": {"profile": g.profile.to_json()}})
+            
+            return redirect(url_for('course.course_landing', course_id = course_id))
+
+    return render_template('course/edit_assignment_group.html', assignment_group = assignment_group)
+
+
+
+@bp.route('/<int:course_id>/delete/<int:component_id>', methods=['GET'])
+@login_required
+def delete_component(course_id, component_id):
+    # check if this course belongs to the logged in user
+    course = fetch_course(course_id)
+    if course is None:
+        return render_template('error.html', 
+            message = 'You do not have permission to access this course.'
+        ), 403
+    
+    users = get_db().users
+
+    # Remove the course with the given ID from the user's profile
+    course.remove_component(str(component_id))
+
+    # Update the user's profile in the database
+    users.update_one(
+        {'_id': g.user['_id']},
+        {'$set': {'profile': g.profile.to_json()}}
+    )
+
+    # Return a redirect to the profile page
+    return redirect(url_for('course.course_landing', course_id = course_id))

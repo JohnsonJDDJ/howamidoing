@@ -18,10 +18,10 @@
     {% for course in profile_details %}
       <div class="card course">
         <div class="main">
-          <div class="header">
+          <a class="header" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
             <h1>{{ course['name'] }}</h1>
             <filler></filler>
-          </div>
+          </a>
           {% if course["error_message"] %}
           <div class="info">
             <div class="message">
@@ -56,11 +56,8 @@
           {% endif %}
         </div>
         <div class="buttons">
-          <a class="enter" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
-            <i class="fa-solid fa-right-to-bracket fa-xl" style="color: #282828;"></i> 
-          </a>
           <a class="edit" href="{{ url_for('profile.edit_course', course_id = course['id']) }}">
-            <i class="fa-solid fa-gear fa-xl" style="color: #282828;"></i> 
+            <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
           </a>
           <a class="delete" href="{{ url_for('profile.delete_course', course_id = course['id']) }}">
             <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Edit Assignment Group{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<form method="post">
+  <div id = "name" class="label-input-pair">
+    <label>Assignment group name</label>
+    <input name="name" value="{{ assignment_group.name }}" required>
+  </div>
+  <div id="weight" class="label-input-pair">
+    <label>Assignment group weight</label>
+    <input name="weight" value="{{ assignment_group.weight }}" required>
+  </div>
+  <div id="curved" class="label-input-pair">
+    <label>Assignment group type</label>
+    <choice id="curved-choice">
+      <li><input type="radio" name="curved" value="Curved" {% if assignment_group.curved %}checked{% endif %}>Curved</li>
+      <li><input type="radio" name="curved" value="Not Curved"  {% if not assignment_group.curved %}checked{% endif %}>Not Curved</li>
+    </choice>
+  </div>
+  <div id="corr" class="label-input-pair">
+    <label>Assignment group correlation coefficient</label>
+    <input name="corr" value="{{ assignment_group.corr }}" required>
+  </div>
+  <div id="num_drops" class="label-input-pair">
+    <label>Number of assignment drops allowed</label>
+    <input name="num_drops" value="{{ assignment_group.num_drops }}" required>
+  </div>
+  <input type="submit" value="Save">
+</form>
+{% endblock %}
