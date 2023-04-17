@@ -6,6 +6,7 @@
 {% block header %}
   {% if g.user %}
     <h1>Your Profile</h1>
+    <filler></filler>
     <a class="action" href="{{ url_for('profile.add_course') }}">Add Course</a>
   {% else %}
     <h1>Welcome</h1>

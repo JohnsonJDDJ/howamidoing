@@ -5,7 +5,9 @@
 {% endblock %}
 
 {% block header %}
+  <h1 class="light"><a href="{{ url_for('index') }}">My Profile</a>&nbsp;&nbsp;>&nbsp;&nbsp;</h1>
   <h1>{{ course.get_name() }}</h1>
+  <filler></filler>
   <a class="action" href="{{ url_for('course.add_single_assignment', course_id = course.get_id()) }}">Add Single Assignment</a>
 {% endblock %}
 
@@ -41,7 +43,7 @@
         </div>
         <div class="buttons">
           <a class="edit" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = comp_info['id']) }}">
-            <i class="fa-solid fa-gear fa-xl" style="color: #282828;"></i> 
+            <i class="fa-solid fa-pen-to-square fa-xl" style="color: #282828;"></i> 
           </a>
           <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = comp_info['id']) }}">
             <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
