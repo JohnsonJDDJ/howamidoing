@@ -267,4 +267,4 @@ def add_group_assignment(course_id, group_id):
             
             return redirect(url_for('course.group_landing', course_id = course_id, group_id = group_id))
 
-    return render_template('course/add_group_assignment.html')
+    return render_template('course/add_group_assignment.html', curved = group.curved)

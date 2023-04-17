@@ -261,59 +261,58 @@ def create_assignment_group_from_form(
     Add the assignment group from the request form to 
     user's profile. 
     
-    If ``component_id`` is specified, then
-    remove any component in the course with the same
-    id, create a new assignment group object and explicitly
-    set the id for the newly created object.
+    If ``component_id`` is specified, then fetch the
+    group with the specified id and edit the existing group.
+
+    Note: If editing the group changes the type between curved
+    and uncurved, then all assignments within the group will be 
+    removed.
 
     Else, create a new assignment group object with its generic
     id. 
     """
+    # Validate form
+    is_valid, error = validate_assignment_group(form)
+
+    # Return error if not valid
+    if not is_valid:
+        return error
+
+    # Fetch data from form and update profile
+    name = form["name"]
+    weight = float(form["weight"])
+    curved = form["curved"] == "Curved"
+    corr = float(form["corr"])
+    num_drops = int(form["num_drops"])
+
+    # [Edit] the existing group
     # Make sure component_id is ID
     if component_id is not None:
         component_id = ID(component_id)
+        # fetch and edit the existing group
+        group = course.get_components()[component_id]["object"]
 
-    # Added group is curved
-    if form['curved'] == "Curved":
-        
-        # Validate form
-        is_valid, error = validate_assignment_group(form)
-
-        # Return error if not valid
-        if not is_valid:
-            return error
-
-        # Fetch data from form and update profile
-        name = form["name"]
-        weight = float(form["weight"])
-        corr = float(form["corr"])
-        num_drops = int(form["num_drops"])
-
-        # Add the group to user's profile
-        if component_id is not None:
+        # If "curved" from form is different form itself, 
+        # trash the old group and build a new group.
+        if curved != group.curved:
             course.remove_component(component_id)
-        course.add_curved_group(weight, name, corr, num_drops, override_id=component_id)
+            if curved:
+                course.add_curved_group(weight, name, corr, num_drops)
+            else:
+                course.add_uncurved_group(weight, name, corr, num_drops)
+        else:
+            # Edit in place
+            group.name = name
+            group.weight = weight
+            group.corr = corr
+            group.num_drops = num_drops
 
-    # Added assignment is uncurved
-    elif form['curved'] == "Not Curved":
-
-        # Validate form
-        is_valid, error = validate_assignment_group(form)
-
-        # Return error if not valid
-        if not is_valid:
-            return error
-
-        # Fetch data from form and update profile
-        name = form["name"]
-        weight = float(form["weight"])
-        corr = float(form["corr"])
-        num_drops = int(form["num_drops"])
-
-         # Add the assignment to user's profile
-        if component_id is not None:
-            course.remove_component(component_id)
-        course.add_uncurved_group(weight, name, corr, num_drops, override_id=component_id)
+    # [Add] the group to user's profile
+    else:
+        if curved:
+            course.add_curved_group(weight, name, corr, num_drops)
+        else:
+            course.add_uncurved_group(weight, name, corr, num_drops)
 
     return None
 

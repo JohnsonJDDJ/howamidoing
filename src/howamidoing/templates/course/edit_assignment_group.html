@@ -16,6 +16,7 @@
   </div>
   <div id="curved" class="label-input-pair">
     <label>Assignment group type</label>
+    <span class="bold">Warning: Changing this will remove all established assignments within this group!</span>
     <choice id="curved-choice">
       <li><input type="radio" name="curved" value="Curved" {% if assignment_group.curved %}checked{% endif %}>Curved</li>
       <li><input type="radio" name="curved" value="Not Curved"  {% if not assignment_group.curved %}checked{% endif %}>Not Curved</li>
