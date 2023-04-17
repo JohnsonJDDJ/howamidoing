@@ -424,8 +424,9 @@ class AssignmentGroup:
     def remove_assignment(self, assignment_id : ID) -> None:
         """
         Remove assignment with ID of ``assignment_id``.
-        If such component does not exist, no-op.
+        If such assignment does not exist, no-op.
         """
+        assignment_id = ID(assignment_id)
         if assignment_id in self.assignments:
             del self.assignments[assignment_id]
 

@@ -55,7 +55,7 @@
           <a class="edit" href="{{ url_for('course.edit_group_assignment', course_id = course.get_id(), group_id = group.get_id(), assignment_id = assignment['id']) }}">
             <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
           </a>
-          <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = assignment['id']) }}">
+          <a class="delete" href="{{ url_for('course.delete_group_assignment', course_id = course.get_id(), group_id = group.get_id(), assignment_id = assignment['id']) }}">
             <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
           </a>
         </div>

@@ -188,6 +188,13 @@ def delete_component(course_id, component_id):
             message = 'You do not have permission to access this course.'
         ), 403
     
+    # check if this component exist
+    component = fetch_component(course, component_id)
+    if component is None:
+        return render_template('error.html', 
+            message = f'Component not found with given id: {component_id}.'
+        ), 404
+    
     users = get_db().users
 
     # Remove the course with the given ID from the user's profile
@@ -314,3 +321,42 @@ def edit_group_assignment(course_id, group_id, assignment_id):
             return redirect(url_for('course.group_landing', course_id = course_id, group_id = group_id))
 
     return render_template('course/edit_group_assignment.html', assignment = assignment)
+
+
+@bp.route('/<int:course_id>/group/<int:group_id>/delete/<int:assignment_id>', methods=['GET'])
+@login_required
+def delete_group_assignment(course_id, group_id, assignment_id):
+    # check if this course belongs to the logged in user
+    course = fetch_course(course_id)
+    if course is None:
+        return render_template('error.html', 
+            message = 'You do not have permission to access this course.'
+        ), 403
+    
+    # check if this component exist and is a group
+    group = fetch_component(course, group_id, group_only=True)
+    if group is None:
+        return render_template('error.html', 
+            message = f'Component not found with given id: {group_id}.'
+        ), 404
+    
+    # check if this component exist and is a group
+    assignment = fetch_grouped_assignment(group, assignment_id)
+    if assignment is None:
+        return render_template('error.html', 
+            message = f'Assignment not found with given id: {assignment_id}, under group with id: {group_id}.'
+        ), 404
+    
+    users = get_db().users
+
+    # Remove the course with the given ID from the user's profile
+    group.remove_assignment(assignment_id)
+
+    # Update the user's profile in the database
+    users.update_one(
+        {'_id': g.user['_id']},
+        {'$set': {'profile': g.profile.to_json()}}
+    )
+
+    # Return a redirect to the profile page
+    return redirect(url_for('course.group_landing', course_id = course_id, group_id = group_id))
