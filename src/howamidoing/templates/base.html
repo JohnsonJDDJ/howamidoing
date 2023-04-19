@@ -6,7 +6,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,200;0,400;0,600;0,700;1,200;1,400;1,600;1,700&display=swap" rel="stylesheet">
 <script src="https://kit.fontawesome.com/bd839e52d6.js" crossorigin="anonymous"></script>
 <nav>
-  <a class="logo" href="{{ url_for('index') }}"><h1>Howamidoing</h1></a>
+  <a class="logo popable" href="{{ url_for('index') }}"><h1>Howamidoing</h1></a>
+  <span class="popup">Main Page</span>
   <filler></filler>
   <ul>
     {% if g.user %}
@@ -28,3 +29,52 @@
   {% endfor %}
   {% block content %}{% endblock %}
 </section>
+
+
+<script>
+// Get all the popable elements
+var popables = document.querySelectorAll('.popable');
+
+// Loop through each popable element and add event listeners
+for (var i = 0; i < popables.length; i++) {
+  // Get the next element sibling
+  var nextSibling = popables[i].nextElementSibling;
+  // If the next element sibling exists and has the .popup class
+  if (nextSibling && nextSibling.classList.contains('popup')) {
+    var popup = popables[i].nextElementSibling;
+
+    // Add mouseover event listener to show the popup
+    popables[i].addEventListener('mouseover', createShowPopupFunction(popup));
+
+    // Add mouseout event listener to hide the popup
+    popables[i].addEventListener('mouseout', createHidePopupFunction(popup));
+
+    // Add mousemove event listener to move the popup along with the mouse
+    document.addEventListener('mousemove', createMovePopupFunction(popup));
+  }
+}
+
+// Helper function to create a showPopup function with a given popup element
+function createShowPopupFunction(popup) {
+  return function(e) {
+    popup.style.display = 'block';
+  };
+}
+
+// Helper function to create a hidePopup function with a given popup element
+function createHidePopupFunction(popup) {
+  return function(e) {
+    popup.style.display = 'none';
+  };
+}
+
+// Helper function to create a movePopup function with a given popup element
+function createMovePopupFunction(popup) {
+  return function(e) {
+    var x = e.clientX + window.scrollX;
+    var y = e.clientY + window.scrollY;
+    popup.style.top = y + 5 + 'px';
+    popup.style.left = x + 5 + 'px';
+  };
+}
+</script>

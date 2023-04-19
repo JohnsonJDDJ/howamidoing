@@ -12,6 +12,22 @@ span { color: #282828; }
 a, a:visited { text-decoration: none; color: #282828;}
 a:hover, a:active { text-decoration: underline;}
 
+/* POP UPS */
+.popup {
+    position: absolute;
+    display: none;
+    background-color: rgb(90, 93, 88);
+    border: 1px solid rgb(70, 73, 68);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    font-size: 14px;
+    padding: 7px;
+    color: rgb(230, 233, 228    );
+    font-weight: 600;
+    line-height: 1.5;
+    z-index: 999;
+    max-width: 300px;
+}
+
 hr { border: none; }
 filler { flex: auto }
 hspace {margin: auto 1%;}
