@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
 
-{% block header %}
-  <h1>{% block title %}Edit Assignment for Group{% endblock %}</h1>
-{% endblock %}
+{% block title %}Edit Assignment for Group{% endblock %}
 
 {% block content %}
 <form method="post">
+  <h1>Edit Assignment for Group</h1>
   <div id = "name" class="label-input-pair">
     <label>Assignment name</label>
     <input name="name" value="{{ assignment.name }}" required>
@@ -28,7 +27,10 @@
     <input name="sigma" value="{{ assignment.sigma }}" required>
   </div>
   {% endif %}
-  <input type="submit" value="Save">
+  <div class="form-actions">
+    <input type="submit" value="Save">
+    <input type="cancel" value="Cancel" onclick="history.back()">
+  </div>
 </form>
 
 {% endblock %}

@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
 
-{% block header %}
-  <h1>{% block title %}New Assignment Group{% endblock %}</h1>
-{% endblock %}
+{% block title %}New Assignment Group{% endblock %}
 
 {% block content %}
 <form method="post">
+  <h1>New Assignment Group</h1>
   <div id = "name" class="label-input-pair">
     <label>Assignment group name</label>
     <input name="name" required>
@@ -29,6 +28,9 @@
     <label>Number of assignment drops allowed</label>
     <input name="num_drops" value="0" required>
   </div>
-  <input type="submit" value="Save">
+  <div class="form-actions">
+    <input type="submit" value="Save">
+    <input type="cancel" value="Cancel" onclick="history.back()">
+  </div>
 </form>
 {% endblock %}

@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
 
-{% block header %}
-  <h1>{% block title %}Edit Single Assignment{% endblock %}</h1>
-{% endblock %}
+{% block title %}Edit Single Assignment{% endblock %}
 
 {% block content %}
 <form method="post">
+  <h1>Edit Single Assignment</h1>
   <div id = "name" class="label-input-pair">
     <label>Assignment name</label>
     <input name="name" value="{{ assignment.name }}" required>
@@ -41,7 +40,10 @@
     <label>Class standard deviation for this assignment</label>
     <input name="sigma" value="{{ assignment.sigma }}">
   </div>
-  <input type="submit" value="Save">
+  <div class="form-actions">
+    <input type="submit" value="Save">
+    <input type="cancel" value="Cancel" onclick="history.back()">
+  </div>
 </form>
 
 <script>
