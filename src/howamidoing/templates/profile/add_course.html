@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
 
-{% block header %}
-  <h1>{% block title %}New Course{% endblock %}</h1>
-{% endblock %}
+{% block title %}New Course{% endblock %}
 
 {% block content %}
   <form method="post">
+    <h1>New Course</h1>
     <div id="name" class="label-input-pair">
       <label>Course name</label>
       <input name="name" value="{{ request.form['name'] }}" required>
@@ -22,6 +21,9 @@
       <label>Correlation coefficient</label>
       <input name="corr" value="{{ request.form.get('corr', '0.6') }}" required>
     </div>
-    <input type="submit" value="Save">
+    <div class="form-actions">
+      <input type="submit" value="Save">
+      <input type="cancel" value="Cancel" onclick="history.back()">
+    </div>
   </form>
 {% endblock %}
