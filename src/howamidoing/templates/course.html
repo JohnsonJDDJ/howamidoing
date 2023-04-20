@@ -14,8 +14,6 @@
 
 {% block content %}
   {% if course_details %}
-    {{ course_details }}
-    {{ group_details }}
     {% for comp_info in course_details %}
       <div class="card-container">
         <div class="card components">
@@ -85,6 +83,15 @@
                 <div class="info-box">Percentage: <span class="bold">{{ assignment['percentage'] }}</span></div>
                 <div class="info-box">Average: <span class="bold">{{ assignment['mu'] }}</span></div>
                 <div class="info-box">Standrad deviation: <span class="bold">{{ assignment['sigma'] }}</span></div>
+                <filler></filler>
+                <a class="popable" href="{{ url_for('course.edit_group_assignment', course_id = course.get_id(), group_id = comp_info['id'], assignment_id = assignment['id']) }}">
+                  <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
+                </a>
+                <span class="popup">Edit Assignment</span>
+                <a class="popable" href="{{ url_for('course.delete_group_assignment', course_id = course.get_id(), group_id = comp_info['id'], assignment_id = assignment['id']) }}">
+                  <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
+                </a>
+                <span class="popup">Delete Assignment</span>
               </div>
             </div>
           {% endfor %}

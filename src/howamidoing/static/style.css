@@ -126,6 +126,7 @@ form .form-actions { display: flex; justify-content: space-evenly; align-items: 
 .extended-cards { display: flex; flex-direction: column; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); }
 .extended-cards .sub-card { display: flex; flex-direction: column; margin: 16px 16px; max-width: none; }
 .extended-cards header { margin: 4px 16px; font-weight: 600; }
+.sub-card a { padding: 8px; }
 .extended-cards header input { font-weight: 600; width: auto;}
 .inline-input { margin: auto 16px; }
 .inline-input input { max-width: 60px; }

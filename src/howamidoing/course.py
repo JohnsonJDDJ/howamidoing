@@ -58,30 +58,27 @@ def course_landing(course_id):
         )
     
     group_details = {}
+    message = None
 
     try:   
         for component in course_details:
             if component["grouped"]:
                 id = component["id"]
                 group = course.get_components()[id]["object"]
-                group_details[id] = group.get_detail()
-
-        return render_template(
-            'course.html', 
-            course = course, 
-            course_details = course_details, 
-            group_details = group_details,
-            message = None
-        )
-    
+                group_details[id] = group.get_detail() 
     except Exception as e:
-        return render_template(
-            'course.html', 
-            course = course, 
-            course_details = course_details, 
-            group_details = group_details,
-            message = None
-        )
+        message = str(e)
+
+    for assignments in group_details.values():
+        assignments.sort(key=lambda i: i['name']) 
+
+    return render_template(
+        'course.html', 
+        course = course, 
+        course_details = course_details, 
+        group_details = group_details,
+        message = message
+    )
 
 
 @bp.route('/<int:course_id>/add_single_assignment', methods=['GET', 'POST'])
@@ -370,7 +367,7 @@ def edit_group_assignment(course_id, group_id, assignment_id):
                 {"_id": g.user["_id"]},
                 {"$set": {"profile": g.profile.to_json()}})
             
-            return redirect(url_for('course.group_landing', course_id = course_id, group_id = group_id))
+            return redirect(url_for('course.course_landing', course_id = course_id))
 
     return render_template('course/edit_group_assignment.html', assignment = assignment)
 
@@ -411,4 +408,4 @@ def delete_group_assignment(course_id, group_id, assignment_id):
     )
 
     # Return a redirect to the profile page
-    return redirect(url_for('course.group_landing', course_id = course_id, group_id = group_id))
+    return redirect(url_for('course.course_landing', course_id = course_id))
