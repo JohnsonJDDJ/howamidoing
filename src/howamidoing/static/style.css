@@ -21,7 +21,7 @@ input:focus:-webkit-autofill {
 }
 
 /* Normal link */
-a, a:visited { text-decoration: none; color: #282828;}
+a, a:visited { text-decoration: none; color: #282828; cursor: pointer; }
 a:hover, a:active { text-decoration: underline;}
 
 /* POP UPS */
@@ -130,3 +130,4 @@ form .form-actions { display: flex; justify-content: space-evenly; align-items: 
 .inline-input { margin: auto 16px; }
 .inline-input input { max-width: 60px; }
 .extended-cards .form-actions input { margin: auto 5px; }
+.extended-cards .add-element { padding: 16px 0; text-align: center; font-weight: 600; }
