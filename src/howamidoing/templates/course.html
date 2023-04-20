@@ -91,7 +91,9 @@
           <a class="add-element"><i class="fa-solid fa-plus"></i> Add assignment</a>
           <form class="sub-card mini-form" method="post">
             <input type="hidden" name="form-name" value="{{ comp_info['id'] }}">
-            <header><input name="name" value="New Assignment" required></header>
+            <header>
+              <input name="name" value="{{ comp_info['name'] ~ ' ' ~ (group_details[comp_info['id']] | length + 1) }}" required>
+            </header>
             <div class="info">
               <div class="inline-input">
                 <input name="score" value="Score" required> / <input name="upper" value="Upper" required>
@@ -134,11 +136,9 @@
     var metaBoxElement = this.parentNode.parentNode.parentNode.querySelector(".meta-box");
     // Get the span with id=meta
     var metaElement = metaBoxElement.querySelector("#meta")
-    console.log("metaElement:", metaElement);
 
     // Toggle the "hidden" CSS class on the metaElement
     metaElement.classList.toggle("hidden");
-    console.log("metaElement classList:", metaElement.classList);
     });
   }
 
