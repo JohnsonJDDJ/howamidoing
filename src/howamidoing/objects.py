@@ -542,9 +542,10 @@ class UncurvedAssignmentGroup(AssignmentGroup):
     def _calculate_summaries(self, assignments: Iterable[Assignment]) -> Summary:
         """Calculate sums for score and upper"""
         final_score = 0
+        n = len(assignments)
 
         for assignment in assignments:
-            final_score += assignment.get_summary()["_percentage"]
+            final_score += assignment.get_summary()["_percentage"] / n
 
         summary = Summary(final_score, 1.0)
 

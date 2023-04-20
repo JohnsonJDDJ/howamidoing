@@ -68,10 +68,12 @@ form choice input { margin: auto 8px; }
 input.danger { color: #cc2f2e; }
 form .form-actions { display: flex; justify-content: space-evenly; align-items: center;}
 
-.label-input-pair input {
+.label-input-pair input, .extended-cards input {
     border: none;
     border-bottom: 1px solid #282828;
+    font-size: 16px;
     padding: 8px;
+    background-color: transparent;
 }
 .form-actions input { 
     background-color: rgb(240, 243, 238); 
@@ -89,27 +91,28 @@ form .form-actions { display: flex; justify-content: space-evenly; align-items: 
 .form-actions input:hover { background-color: rgb(200, 203, 198); }
 
 /* CARD */
-.card { margin: 16px 0; width: auto; display: flex; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); font-weight: 200; }
+.card-container { margin: 16px 0; display: flex; flex-direction: column; }
+.card-container a:hover, .card-container a:active { background-color: rgb(240, 243, 238); text-decoration: none; }
+
+.card { margin: 0; width: auto; display: flex; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); font-weight: 200; }
 .card.course { height: 240px; } /* Taller for course */
 .card.components { height: 160px; } /* Shorter for components */
-.card a:hover, .card a:active { background-color: rgb(240, 243, 238); text-decoration: none; }
 
 .card > .main { display: flex; flex-direction: column; flex: auto; border-right: 2px solid rgb(240, 243, 238); }
-.card .header { margin: 0; border-bottom: 2px solid rgb(240, 243, 238); display: flex; align-items: center;}
+.main > .header { margin: 0; border-bottom: 2px solid rgb(240, 243, 238); display: flex; align-items: center;}
 .card.course .header { padding: 16px 16px; }
 .card.components .header { padding: 8px 16px; }
 .card .header > h1 { margin: 0; }
 
-.card .info { flex: auto; display: flex; }
-.info > .message { font-weight: 400; margin: auto 20px; }
-.info > .info-box { display: flex; flex-direction: column; margin: auto 20px;}
+.card-container .info { flex: auto; display: flex; }
+.info > .message { font-weight: 400; margin: auto 16px; }
+.info > .info-box { display: flex; flex-direction: column; margin: auto 16px;}
 .info-box > .big { font-size: 60px; font-weight: 600; }
 .info-box > .small { font-size: 25px; font-weight: 400; }
 
 .info > .toggle-box { display: flex; flex-direction: column; margin: 0;}
-.info .toggle { display: flex; cursor: pointer; height: 32px; padding: 8px; justify-content: flex-start; align-items: center; }
-.info .toggle:hover {background-color: rgb(240, 243, 238); text-decoration: underline;}
-
+.toggle-box .toggle { display: flex; cursor: pointer; height: 32px; padding: 8px; justify-content: flex-start; align-items: center; }
+.toggle-box .toggle:hover {background-color: rgb(240, 243, 238); text-decoration: underline;}
 
 .card .buttons { display: flex; flex-direction: column; width: 48px; }
 .card .buttons a { flex: auto; display: flex; justify-content: center; align-items: center; }
@@ -118,3 +121,12 @@ form .form-actions { display: flex; justify-content: space-evenly; align-items: 
 .card .meta-box { display: flex; align-items: center; margin-left: 16px; font-weight: 400; font-style: italic; }
 .card.course .meta-box { height: 48px; }
 .card.components .meta-box { height: 32px; }
+
+/* EXTENDED CARD */
+.extended-cards { display: flex; flex-direction: column; background-color: rgb(250, 253, 248); border: 2px solid rgb(240, 243, 238); }
+.extended-cards .sub-card { display: flex; flex-direction: column; margin: 16px 16px; max-width: none; }
+.extended-cards header { margin: 4px 16px; font-weight: 600; }
+.extended-cards header input { font-weight: 600; width: auto;}
+.inline-input { margin: auto 16px; }
+.inline-input input { max-width: 60px; }
+.extended-cards .form-actions input { margin: auto 5px; }

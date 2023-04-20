@@ -16,58 +16,60 @@
 {% block content %}
   {% if profile_details%}
     {% for course in profile_details %}
-      <div class="card course">
-        <div class="main">
-          <a class="header popable" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
-            <h1>{{ course['name'] }}</h1>
-            <filler></filler>
-          </a>
-          <span class="popup">Enter Course</span>
-          {% if course["error_message"] %}
-          <div class="info">
-            <div class="message">
-              {{ course["error_message"] }}
+      <div class="card-container">
+        <div class="card course">
+          <div class="main">
+            <a class="header popable" href="{{ url_for('course.course_landing', course_id = course['id']) }}">
+              <h1>{{ course['name'] }}</h1>
+              <filler></filler>
+            </a>
+            <span class="popup">Enter Course</span>
+            {% if course["error_message"] %}
+            <div class="info">
+              <div class="message">
+                {{ course["error_message"] }}
+              </div>
             </div>
+            {% else %}
+            <div class="info">
+              <div class="info-box">
+                Your percentage: <span class="big">{{ course['percentage'] }}</span> 
+              </div>
+              <div class="info-box hidden" id="letter-grade">
+                Letter grade estimate:  <span class="big">{{ course['grade'] }}</span> 
+              </div>
+              <div class="info-box">
+                Class average: <span class="small">{{ course['mu'] }}</span>
+                Class standard deviation:  <span class="small">{{ course['sigma'] }}</span>
+              </div>
+              <filler></filler>
+              <div class="toggle-box">
+                <span class="toggle" id="toggle-letter-grade" type="button">Toggle letter grade</span>
+                <span class="toggle" id="toggle-meta" type="button">Toggle meta</span>
+              </div>
+            </div>
+            <div class="meta-box">
+              Status: {{ course['status'] }}
+              <span class="hidden" id="meta">
+                ; Course components: {% if course['is_final'] %}Final{% else %}Not final{% endif %};
+                Course Type: {% if course['class_curved'] %}Curved course{% else %}Uncurved course{% endif %}
+              </span>
+            </div>
+            {% endif %}
           </div>
-          {% else %}
-          <div class="info">
-            <div class="info-box">
-              Your percentage: <span class="big">{{ course['percentage'] }}</span> 
-            </div>
-            <div class="info-box hidden" id="letter-grade">
-              Letter grade estimate:  <span class="big">{{ course['grade'] }}</span> 
-            </div>
-            <div class="info-box">
-              Class average: <span class="small">{{ course['mu'] }}</span>
-              Class standard deviation:  <span class="small">{{ course['sigma'] }}</span>
-            </div>
-            <filler></filler>
-            <div class="toggle-box">
-              <span class="toggle" id="toggle-letter-grade" type="button">Toggle letter grade</span>
-              <span class="toggle" id="toggle-meta" type="button">Toggle meta</span>
-            </div>
+          <div class="buttons">
+            <a class="popable" href="{{ url_for('profile.edit_course', course_id = course['id']) }}">
+              <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
+            </a>
+            <span class="popup">Edit Course</span>
+            <a class="popable" href="{{ url_for('profile.delete_course', course_id = course['id']) }}">
+              <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
+            </a>
+            <span class="popup">Delete Course</span>
           </div>
-          <div class="meta-box">
-            Status: {{ course['status'] }}
-            <span class="hidden" id="meta">
-              ; Course components: {% if course['is_final'] %}Final{% else %}Not final{% endif %};
-              Course Type: {% if course['class_curved'] %}Curved course{% else %}Uncurved course{% endif %}
-            </span>
-          </div>
-          {% endif %}
         </div>
-        <div class="buttons">
-          <a class="popable" href="{{ url_for('profile.edit_course', course_id = course['id']) }}">
-            <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
-          </a>
-          <span class="popup">Edit Course</span>
-          <a class="popable" href="{{ url_for('profile.delete_course', course_id = course['id']) }}">
-            <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
-          </a>
-          <span class="popup">Delete Course</span>
-        </div>
-        
       </div>
+      
       {% if not loop.last %}
         <hr>
       {% endif %}

@@ -14,71 +14,111 @@
 
 {% block content %}
   {% if course_details %}
+    {{ course_details }}
+    {{ group_details }}
     {% for comp_info in course_details %}
-      <div class="card components">
-        <div class="main">
-          <div class="header">
-            <h1>{{ comp_info['name'] }}</h1>
+      <div class="card-container">
+        <div class="card components">
+          <div class="main">
+            <div class="header"><h1>{{ comp_info['name'] }}</h1></div>
+            {% if comp_info["error_message"] %}
+            <div class="info">
+              <div class="message">
+                {{ comp_info["error_message"] }}
+              </div>
+            </div>
+            {% else %}
+            <div class="info">
+              <div class="info-box">
+                Your percentage: <span class="small bold">{{ comp_info['percentage'] }}</span> 
+              </div>
+              <div class="info-box">
+                Class average: <span class="small">{{ comp_info['mu'] }}</span>
+              </div>
+              <div class="info-box">
+                Class standard deviation:  <span class="small">{{ comp_info['sigma'] }}</span>
+              </div>
+              <filler></filler>
+              <div class="toggle-box">
+                <span class="toggle" id="toggle-meta" type="button">Toggle meta</span>
+              </div>
+            </div>
+            <div class="meta-box">
+              Weight: {{ comp_info['weight'] }}
+              <span class="hidden" id="meta">
+                ; Component type:
+                {% if comp_info["grouped"] and comp_info["curved"] %} Curved assignment group
+                {% elif comp_info["grouped"] and not comp_info["curved"] %} Uncurved assignment group
+                {% elif not comp_info["grouped"] and comp_info["curved"] %} Curved single assignment
+                {% elif not comp_info["grouped"] and not comp_info["curved"] %} uncurved single assignment
+                {% else %} Unknown {% endif %}
+              </span>
+            </div>
+            {% endif %}
           </div>
-          {% if comp_info["error_message"] %}
-          <div class="info">
-            <div class="message">
-              {{ comp_info["error_message"] }}
-            </div>
+          <div class="buttons">
+            {% if comp_info["grouped"] %}
+            <a class="open" href="{{ url_for('course.group_landing', course_id = course.get_id(), group_id = comp_info['id']) }}">
+              <i class="fa-solid fa-folder-open fa-xl" style="color: #282828;"></i> 
+            </a>
+            <a class="edit" href="{{ url_for('course.edit_assignment_group', course_id = course.get_id(), component_id = comp_info['id']) }}">
+            {% else %}
+            <a class="edit" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = comp_info['id']) }}">
+            {% endif %}
+              <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
+            </a>
+            <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = comp_info['id']) }}">
+              <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
+            </a>
           </div>
-          {% else %}
-          <div class="info">
-            <div class="info-box">
-              Your percentage: <span class="small bold">{{ comp_info['percentage'] }}</span> 
-            </div>
-            <div class="info-box">
-              Class average: <span class="small">{{ comp_info['mu'] }}</span>
-            </div>
-            <div class="info-box">
-              Class standard deviation:  <span class="small">{{ comp_info['sigma'] }}</span>
-            </div>
-            <filler></filler>
-            <div class="toggle-box">
-              <span class="toggle" id="toggle-meta" type="button">Toggle meta</span>
-            </div>
-          </div>
-          <div class="meta-box">
-            Weight: {{ comp_info['weight'] }}
-            <span class="hidden" id="meta">
-              ; Component type:
-              {% if comp_info["grouped"] and comp_info["curved"] %} Curved assignment group
-              {% elif comp_info["grouped"] and not comp_info["curved"] %} Uncurved assignment group
-              {% elif not comp_info["grouped"] and comp_info["curved"] %} Curved single assignment
-              {% elif not comp_info["grouped"] and not comp_info["curved"] %} uncurved single assignment
-              {% else %} Unknown {% endif %}
-            </span>
-          </div>
-          {% endif %}
         </div>
-        <div class="buttons">
-          {% if comp_info["grouped"] %}
-          <a class="open" href="{{ url_for('course.group_landing', course_id = course.get_id(), group_id = comp_info['id']) }}">
-            <i class="fa-solid fa-folder-open fa-xl" style="color: #282828;"></i> 
-          </a>
-          <a class="edit" href="{{ url_for('course.edit_assignment_group', course_id = course.get_id(), component_id = comp_info['id']) }}">
-          {% else %}
-          <a class="edit" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = comp_info['id']) }}">
-          {% endif %}
-            <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
-          </a>
-          <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = comp_info['id']) }}">
-            <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
-          </a>
+
+        {% if comp_info["grouped"] %}
+        <div class="extended-cards">
+          {% for assignment in group_details[comp_info["id"]] %}
+            <div class="sub-card">
+              <header>{{ assignment["name"] }}</header>
+              <div class="info">
+                <div class="info-box">Percentage: <span class="bold">{{ assignment['percentage'] }}</span></div>
+                <div class="info-box">Average: <span class="bold">{{ assignment['mu'] }}</span></div>
+                <div class="info-box">Standrad deviation: <span class="bold">{{ assignment['sigma'] }}</span></div>
+              </div>
+            </div>
+          {% endfor %}
+          <a class="add-element">Add assignment</a>
+          <form class="sub-card mini-form", method="post">
+            <input type="hidden" name="form-name" value="{{ comp_info['id'] }}">
+            <header><input name="name" value="New Assignment" required></header>
+            <div class="info">
+              <div class="inline-input">
+                <input name="score" value="Score" required> / <input name="upper" value="Upper" required>
+              </div>
+              {% if comp_info["curved"] %}
+              <div id="mu" class="inline-input"><input name="mu" value="Mean" required></div>
+              <div id="sigma" class="inline-input"><input name="sigma" value="Std." required></div>
+              {% endif %}
+              <filler></filler>
+              <div class="form-actions">
+                <input type="submit" value="Save">
+                <input type="cancel" value="Cancel" onclick="history.back()">
+              </div>
+            </div>
+          </form>
         </div>
+        {% endif %}
+
       </div>
-      {% if not loop.last %}
-        <hr>
-      {% endif %}
+      
+      {% if not loop.last %}<hr>{% endif %}
+
     {% endfor %} 
+
   {% endif %}
+
   {% if message %}
     {{ message }}
   {% endif %}
+
   <script>
      // Get all the toggle-meta button elements
      var toggleMeta = document.querySelectorAll("#toggle-meta");

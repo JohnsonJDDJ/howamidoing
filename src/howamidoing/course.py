@@ -23,13 +23,65 @@ def course_landing(course_id):
             message = 'You do not have permission to access this course.'
         ), 403
     
+    if request.method == 'POST':
+        # Get db
+        group_id = request.form["form-name"]
+        group = fetch_component(course, group_id, group_only=True)
+        users = get_db().users
+
+        # Create the assignment from form
+        error = create_group_assignment_from_form(group, request.form)
+
+        # Flash error
+        if error is not None:
+            flash(error)
+
+        # update the database if no error
+        else:
+            # Update the user's profile in the database
+            users.update_one(
+                {"_id": g.user["_id"]},
+                {"$set": {"profile": g.profile.to_json()}})
+
     # display course detail
     try:
         course_details = course.get_detail()
-        return render_template('course.html', course = course, course_details = course_details, message = None)
-    # no components -> course_details = []
+
+    # Return error message
     except Exception as e: 
-        return render_template('course.html', course = course, course_details = [], message = e)
+        return render_template(
+            'course.html', 
+            course = course, 
+            course_details = [], 
+            group_details = [],
+            message = e
+        )
+    
+    group_details = {}
+
+    try:   
+        for component in course_details:
+            if component["grouped"]:
+                id = component["id"]
+                group = course.get_components()[id]["object"]
+                group_details[id] = group.get_detail()
+
+        return render_template(
+            'course.html', 
+            course = course, 
+            course_details = course_details, 
+            group_details = group_details,
+            message = None
+        )
+    
+    except Exception as e:
+        return render_template(
+            'course.html', 
+            course = course, 
+            course_details = course_details, 
+            group_details = group_details,
+            message = None
+        )
 
 
 @bp.route('/<int:course_id>/add_single_assignment', methods=['GET', 'POST'])
