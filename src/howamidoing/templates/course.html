@@ -100,7 +100,7 @@
               <filler></filler>
               <div class="form-actions">
                 <input type="submit" value="Save">
-                <input type="cancel" value="Cancel" onclick="history.back()">
+                <input type="cancel" value="Cancel">
               </div>
             </div>
           </form>
@@ -120,23 +120,36 @@
   {% endif %}
 
   <script>
-     // Get all the toggle-meta button elements
-     var toggleMeta = document.querySelectorAll("#toggle-meta");
+  // Get all the toggle-meta button elements
+  var toggleMeta = document.querySelectorAll("#toggle-meta");
 
-    // Loop through each button and add a click event listener
-    for (var i = 0; i < toggleMeta.length; i++) {
-      toggleMeta[i].addEventListener("click", function() {
-      console.log("Meta Button clicked!");
-      // Get the info-box element with class="meta-box" that is a sibling of grandparent of the clicked button
-      var metaBoxElement = this.parentNode.parentNode.parentNode.querySelector(".meta-box");
-      // Get the span with id=meta
-      var metaElement = metaBoxElement.querySelector("#meta")
-      console.log("metaElement:", metaElement);
+  // Loop through each button and add a click event listener
+  for (var i = 0; i < toggleMeta.length; i++) {
+    toggleMeta[i].addEventListener("click", function() {
+    console.log("Meta Button clicked!");
+    // Get the info-box element with class="meta-box" that is a sibling of grandparent of the clicked button
+    var metaBoxElement = this.parentNode.parentNode.parentNode.querySelector(".meta-box");
+    // Get the span with id=meta
+    var metaElement = metaBoxElement.querySelector("#meta")
+    console.log("metaElement:", metaElement);
 
-      // Toggle the "hidden" CSS class on the metaElement
-      metaElement.classList.toggle("hidden");
-      console.log("metaElement classList:", metaElement.classList);
-      });
-    }
+    // Toggle the "hidden" CSS class on the metaElement
+    metaElement.classList.toggle("hidden");
+    console.log("metaElement classList:", metaElement.classList);
+    });
+  }
+
+  $(document).ready(function() {
+    $(".mini-form").hide();
+    $(".add-element").click(function() {
+      $(this).hide();
+      $(this).next(".mini-form").show();
+    });
+    $(".mini-form input[type='cancel']").click(function() {
+      $(this).closest(".mini-form").hide();
+      $(this).closest(".mini-form").prev(".add-element").show();
+      return false;
+    });
+  });
   </script>
 {% endblock %}
