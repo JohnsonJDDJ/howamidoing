@@ -58,18 +58,21 @@
           </div>
           <div class="buttons">
             {% if comp_info["grouped"] %}
-            <a class="open" href="{{ url_for('course.group_landing', course_id = course.get_id(), group_id = comp_info['id']) }}">
+            <a class="open-group popable">
               <i class="fa-solid fa-folder-open fa-xl" style="color: #282828;"></i> 
             </a>
-            <a class="edit" href="{{ url_for('course.edit_assignment_group', course_id = course.get_id(), component_id = comp_info['id']) }}">
+            <span class="popup">Open/Close Group</span>
+            <a class="popable" href="{{ url_for('course.edit_assignment_group', course_id = course.get_id(), component_id = comp_info['id']) }}">
             {% else %}
-            <a class="edit" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = comp_info['id']) }}">
+            <a class="popable" href="{{ url_for('course.edit_single_assignment', course_id = course.get_id(), component_id = comp_info['id']) }}">
             {% endif %}
               <i class="fa-solid fa-pen fa-xl" style="color: #282828;"></i> 
             </a>
-            <a class="delete" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = comp_info['id']) }}">
+            <span class="popup">Edit Component</span>
+            <a class="popable" href="{{ url_for('course.delete_component', course_id = course.get_id(), component_id = comp_info['id']) }}">
               <i class="fa-solid fa-trash-can fa-xl" style="color: #282828;"></i> 
             </a>
+            <span class="popup">Delete Component</span>
           </div>
         </div>
 
@@ -85,8 +88,8 @@
               </div>
             </div>
           {% endfor %}
-          <a class="add-element">Add assignment</a>
-          <form class="sub-card mini-form", method="post">
+          <a class="add-element"><i class="fa-solid fa-plus"></i> Add assignment</a>
+          <form class="sub-card mini-form" method="post">
             <input type="hidden" name="form-name" value="{{ comp_info['id'] }}">
             <header><input name="name" value="New Assignment" required></header>
             <div class="info">
@@ -140,16 +143,27 @@
   }
 
   $(document).ready(function() {
-    $(".mini-form").hide();
-    $(".add-element").click(function() {
+    // Hide all mini-forms
+    $('.mini-form').hide();
+
+    // Show/hide mini-form and add-element on click
+    $('.add-element').click(function() {
       $(this).hide();
-      $(this).next(".mini-form").show();
+      $(this).next('.mini-form').show();
     });
-    $(".mini-form input[type='cancel']").click(function() {
-      $(this).closest(".mini-form").hide();
-      $(this).closest(".mini-form").prev(".add-element").show();
-      return false;
+
+    $('.mini-form .form-actions input[type=cancel]').click(function() {
+      $(this).closest('.mini-form').hide();
+      $(this).closest('.mini-form').prev('.add-element').show();
+    });
+
+    // Show/hide extended-cards on click
+    $('.extended-cards').hide();
+
+    $('.open-group').click(function(){
+      $(this).closest('.card').siblings('.extended-cards').slideToggle();
     });
   });
+
   </script>
 {% endblock %}
